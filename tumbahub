@@ -1,0 +1,410 @@
+--[[ 
+    TUMBA MEGA SYSTEM v5.0 [PROTECTED]
+]]
+if not game:IsLoaded() then game.Loaded:Wait() end
+local l__0=game:GetService("Players")
+local l__1=l__0.LocalPlayer
+local l__2=game:GetService("UserInputService")
+local l__3=game:GetService("TweenService")
+local l__4=game:GetService("RunService")
+local l__5=game:GetService("Workspace")
+local l__7=game:GetService("ReplicatedStorage")
+local l__8=game:GetService("HttpService")
+local l__9=game:GetService("Lighting")
+local l__10=game:GetService("CoreGui")
+local l__12=game:GetService("CollectionService")
+local l__13=game:GetService("Debris")
+local l__14=game:GetService("VirtualInputManager")
+local _7382_G={Settings={Menu={Width=950,Height=550,BackgroundColor=Color3.fromRGB(20,20,30),TitleBarColor=Color3.fromRGB(30,30,45),AccentColor=Color3.fromRGB(200,70,255),TextColor=Color3.fromRGB(255,255,255),Transparency=0.1,CornerRadius=12},System={AntiAFK=true}},States={ESP={Enabled=false,Boxes=true,Names=true,Distance=true,Health=true,Tracers=true,MaxDistance=1000,TeamColor=Color3.new(0,1,0),EnemyColor=Color3.new(1,0,0)},KitESP={Enabled=false},AimAssist={Enabled=false,Active=false,Key="R",FOV=120,Smoothness=0.4,Range=100,TargetPart="Head",ShowFOV=true},Visuals={NoFog=false,FullBright=false,NightMode=false,RemoveShadows=false},Player={Fly=false,FlyMode="Velocity",FlySpeed=50,Speed=false,SpeedValue=24,InfiniteJump=false,NoClip=false,AntiKnockback=false,KnockbackStrength=0,Spider=false,SpiderSpeed=30,SpinBot=false,SpinSpeed=10,Scaffold={Enabled=false,GridSize=3},NoFall=false,GodMode=false,FastBreak=false,FollowTarget=nil},Combat={Killaura={Enabled=false,Range=20},TriggerBot=false,AutoShoot=false},Misc={AutoFarm=false,ChestSteal={Enabled=false,Range=25},FameSpam=false,FamesMom=false,AutoDeposit={Enabled=false,Range=25},AutoKit={Enabled=false,KitName="yuzi"},Lani={Enabled=false,Keybind="X"}},Cletus={Enabled=false,Range=20},Beekeeper={Enabled=false,AutoCatch=false},Eldertree={Enabled=false,Range=30},StarCollector={Enabled=false,Range=60},Metal={Enabled=false,Range=25,AutoCollect=false},Fisherman={Enabled=false},Noelle={Enabled=false,Binds={}}},Objects={Connections={},GUI=nil,Toggles={},KitESPFolder=nil},GlobalTarget=nil}
+
+local function Notify(m) local g=Instance.new("ScreenGui",l__10);local t=Instance.new("TextLabel",g);t.Size=UDim2.new(0,300,0,50);t.Position=UDim2.new(1,-320,0,20);t.BackgroundColor3=Color3.fromRGB(30,30,30);t.TextColor3=Color3.new(1,1,1);t.Text=m;l__13:AddItem(g,3) end
+
+_7382_G.ConfigSystem={}
+function _7382_G.ConfigSystem.Save(n) if not writefile then return end;local d={Settings=_7382_G.Settings,States=_7382_G.States};writefile("TumbaConfig_"..n..".json",l__8:JSONEncode(d)) end
+function _7382_G.ConfigSystem.Load(n) if not readfile or not isfile then return end;local f="TumbaConfig_"..n..".json";if not isfile(f) then return end;local s,d=pcall(function() return l__8:JSONDecode(readfile(f)) end);if s then if d.Settings then for k,v in pairs(d.Settings.Menu) do _7382_G.Settings.Menu[k]=v end end;if d.States then for c,v in pairs(d.States) do for k2,v2 in pairs(v) do if _7382_G.States[c] then _7382_G.States[c][k2]=v2 end end end end end end
+
+local function InitGUI()
+    local TumbaGUI=Instance.new("ScreenGui",l__10);TumbaGUI.Name="TumbaMegaSystem";TumbaGUI.Enabled=false
+    local MainFrame=Instance.new("Frame",TumbaGUI);MainFrame.Size=UDim2.new(0,600,0,400);MainFrame.Position=UDim2.new(0.5,-300,0.5,-200);MainFrame.BackgroundColor3=_7382_G.Settings.Menu.BackgroundColor
+    local TabContainer=Instance.new("ScrollingFrame",MainFrame);TabContainer.Size=UDim2.new(0,120,1,0);TabContainer.BackgroundColor3=Color3.fromRGB(15,15,20)
+    local ContentContainer=Instance.new("Frame",MainFrame);ContentContainer.Size=UDim2.new(1,-120,1,0);ContentContainer.Position=UDim2.new(0,120,0,0);ContentContainer.BackgroundTransparency=1
+    local UIList=Instance.new("UIListLayout",TabContainer);UIList.Padding=UDim.new(0,5)
+    local Tabs={}
+    
+    local function CreateTab(n)
+        local b=Instance.new("TextButton",TabContainer);b.Size=UDim2.new(1,0,0,30);b.Text=n;b.TextColor3=Color3.new(1,1,1);b.BackgroundColor3=Color3.fromRGB(40,40,50)
+        local f=Instance.new("ScrollingFrame",ContentContainer);f.Size=UDim2.new(1,0,1,0);f.Visible=false;f.BackgroundTransparency=1;Tabs[n]=f
+        local l=Instance.new("UIListLayout",f);l.Padding=UDim.new(0,5)
+        b.MouseButton1Click:Connect(function() for _,v in pairs(Tabs) do v.Visible=false end;f.Visible=true end)
+        return f
+    end
+    
+    local function CreateToggle(p,t,v,cb)
+        local b=Instance.new("TextButton",p);b.Size=UDim2.new(1,0,0,30);b.Text=t..": "..(v and "ON" or "OFF");b.BackgroundColor3=v and Color3.fromRGB(0,200,100) or Color3.fromRGB(50,50,50)
+        b.MouseButton1Click:Connect(function() v=not v;b.Text=t..": "..(v and "ON" or "OFF");b.BackgroundColor3=v and Color3.fromRGB(0,200,100) or Color3.fromRGB(50,50,50);cb(v) end)
+    end
+    
+    local function CreateSlider(p,t,min,max,val,cb)
+        local f=Instance.new("Frame",p);f.Size=UDim2.new(1,0,0,40);f.BackgroundTransparency=1
+        local l=Instance.new("TextLabel",f);l.Size=UDim2.new(1,0,0,20);l.Text=t..": "..val;l.TextColor3=Color3.new(1,1,1);l.BackgroundTransparency=1
+        local s=Instance.new("TextButton",f);s.Size=UDim2.new(1,0,0,20);s.Position=UDim2.new(0,0,0,20);s.Text=""
+        local fill=Instance.new("Frame",s);fill.Size=UDim2.new((val-min)/(max-min),0,1,0);fill.BackgroundColor3=Color3.fromRGB(200,70,255)
+        s.MouseButton1Down:Connect(function()
+            local c;c=l__4.RenderStepped:Connect(function()
+                if not l__2:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) then c:Disconnect() return end
+                local p=math.clamp((l__2:GetMouseLocation().X-s.AbsolutePosition.X)/s.AbsoluteSize.X,0,1)
+                local v=math.floor(min+(max-min)*p)
+                fill.Size=UDim2.new(p,0,1,0);l.Text=t..": "..v;cb(v)
+            end)
+        end)
+    end
+    
+    local function CreateButton(p,t,cb)
+        local b=Instance.new("TextButton",p);b.Size=UDim2.new(1,0,0,30);b.Text=t;b.BackgroundColor3=Color3.fromRGB(60,60,80);b.TextColor3=Color3.new(1,1,1)
+        b.MouseButton1Click:Connect(cb)
+    end
+
+    local Home=CreateTab("Home");CreateToggle(Home,"ESP",_7382_G.States.ESP.Enabled,function(v) _7382_G.States.ESP.Enabled=v end)
+    CreateToggle(Home,"Kit ESP",_7382_G.States.KitESP.Enabled,function(v) _7382_G.States.KitESP.Enabled=v;if not v and _7382_G.Objects.KitESPFolder then _7382_G.Objects.KitESPFolder:ClearAllChildren() end end)
+    CreateToggle(Home,"Aim Assist",_7382_G.States.AimAssist.Enabled,function(v) _7382_G.States.AimAssist.Enabled=v end)
+    
+    local Player=CreateTab("Player")
+    CreateToggle(Player,"Speed",_7382_G.States.Player.Speed,function(v) _7382_G.States.Player.Speed=v end)
+    CreateSlider(Player,"Speed Val",16,100,_7382_G.States.Player.SpeedValue,function(v) _7382_G.States.Player.SpeedValue=v end)
+    CreateToggle(Player,"Fly",_7382_G.States.Player.Fly,function(v) _7382_G.States.Player.Fly=v end)
+    CreateSlider(Player,"Fly Speed",10,100,_7382_G.States.Player.FlySpeed,function(v) _7382_G.States.Player.FlySpeed=v end)
+    CreateToggle(Player,"Inf Jump",_7382_G.States.Player.InfiniteJump,function(v) _7382_G.States.Player.InfiniteJump=v end)
+    CreateToggle(Player,"NoClip",_7382_G.States.Player.NoClip,function(v) _7382_G.States.Player.NoClip=v end)
+    CreateToggle(Player,"Anti-KB",_7382_G.States.Player.AntiKnockback,function(v) _7382_G.States.Player.AntiKnockback=v end)
+    CreateToggle(Player,"Spider",_7382_G.States.Player.Spider,function(v) _7382_G.States.Player.Spider=v end)
+    CreateToggle(Player,"Scaffold",_7382_G.States.Player.Scaffold.Enabled,function(v) _7382_G.States.Player.Scaffold.Enabled=v end)
+    CreateToggle(Player,"SpinBot",_7382_G.States.Player.SpinBot,function(v) _7382_G.States.Player.SpinBot=v end)
+    CreateToggle(Player,"NoFall",_7382_G.States.Player.NoFall,function(v) _7382_G.States.Player.NoFall=v end)
+    CreateToggle(Player,"GodMode",_7382_G.States.Player.GodMode,function(v) _7382_G.States.Player.GodMode=v;if l__1.Character and l__1.Character:FindFirstChild("Humanoid") then l__1.Character.Humanoid.MaxHealth=v and math.huge or 100;l__1.Character.Humanoid.Health=v and math.huge or 100 end end)
+    CreateToggle(Player,"FastBreak",_7382_G.States.Player.FastBreak,function(v) _7382_G.States.Player.FastBreak=v end)
+
+    local Combat=CreateTab("Combat")
+    CreateToggle(Combat,"Killaura",_7382_G.States.Combat.Killaura.Enabled,function(v) _7382_G.States.Combat.Killaura.Enabled=v end)
+    CreateToggle(Combat,"TriggerBot",_7382_G.States.Combat.TriggerBot,function(v) _7382_G.States.Combat.TriggerBot=v end)
+    CreateToggle(Combat,"AutoShoot",_7382_G.States.Combat.AutoShoot,function(v) _7382_G.States.Combat.AutoShoot=v end)
+    CreateSlider(Combat,"Range",10,30,_7382_G.States.Combat.Killaura.Range,function(v) _7382_G.States.Combat.Killaura.Range=v end)
+
+    local Visuals=CreateTab("Visuals")
+    CreateToggle(Visuals,"No Fog",_7382_G.States.Visuals.NoFog,function(v) _7382_G.States.Visuals.NoFog=v;l__9.FogEnd=v and 100000 or 1000 end)
+    CreateToggle(Visuals,"FullBright",_7382_G.States.Visuals.FullBright,function(v) _7382_G.States.Visuals.FullBright=v;l__9.Brightness=v and 2 or 1;l__9.Ambient=v and Color3.new(1,1,1) or Color3.new(0.5,0.5,0.5) end)
+    CreateToggle(Visuals,"Night Mode",_7382_G.States.Visuals.NightMode,function(v) _7382_G.States.Visuals.NightMode=v;l__9.ClockTime=v and 0 or 14 end)
+    CreateToggle(Visuals,"Remove Shadows",_7382_G.States.Visuals.RemoveShadows,function(v) _7382_G.States.Visuals.RemoveShadows=v;l__9.GlobalShadows=not v end)
+
+    local Farm=CreateTab("Farm")
+    CreateToggle(Farm,"AutoFarm (Ore)",_7382_G.States.Misc.AutoFarm,function(v) _7382_G.States.Misc.AutoFarm=v end)
+    CreateToggle(Farm,"Chest Steal",_7382_G.States.Misc.ChestSteal.Enabled,function(v) _7382_G.States.Misc.ChestSteal.Enabled=v end)
+    CreateToggle(Farm,"Cletus Auto",_7382_G.States.Cletus.Enabled,function(v) _7382_G.States.Cletus.Enabled=v end)
+    CreateToggle(Farm,"Beekeeper",_7382_G.States.Beekeeper.Enabled,function(v) _7382_G.States.Beekeeper.Enabled=v end)
+    CreateToggle(Farm,"Auto Catch Bees",_7382_G.States.Beekeeper.AutoCatch,function(v) _7382_G.States.Beekeeper.AutoCatch=v end)
+    CreateToggle(Farm,"Auto Deposit",_7382_G.States.Misc.AutoDeposit.Enabled,function(v) _7382_G.States.Misc.AutoDeposit.Enabled=v end)
+    CreateToggle(Farm,"Eldertree",_7382_G.States.Eldertree.Enabled,function(v) _7382_G.States.Eldertree.Enabled=v end)
+    CreateToggle(Farm,"Star Collector",_7382_G.States.StarCollector.Enabled,function(v) _7382_G.States.StarCollector.Enabled=v end)
+    CreateToggle(Farm,"Metal Detector",_7382_G.States.Metal.Enabled,function(v) _7382_G.States.Metal.Enabled=v end)
+    CreateToggle(Farm,"Fisherman",_7382_G.States.Fisherman.Enabled,function(v) _7382_G.States.Fisherman.Enabled=v end)
+    CreateToggle(Farm,"Noelle (Auto)",_7382_G.States.Noelle.Enabled,function(v) _7382_G.States.Noelle.Enabled=v end)
+
+    local Misc=CreateTab("Misc")
+    CreateToggle(Misc,"Fame Spam",_7382_G.States.Misc.FameSpam,function(v) _7382_G.States.Misc.FameSpam=v end)
+    CreateToggle(Misc,"Fames Mom",_7382_G.States.Misc.FamesMom,function(v) _7382_G.States.Misc.FamesMom=v end)
+    CreateToggle(Misc,"AutoKit",_7382_G.States.Misc.AutoKit.Enabled,function(v) _7382_G.States.Misc.AutoKit.Enabled=v end)
+    CreateToggle(Misc,"Lani (Key: X)",_7382_G.States.Misc.Lani.Enabled,function(v) _7382_G.States.Misc.Lani.Enabled=v end)
+    
+    local PlayersTab=CreateTab("Players")
+    local PlayerListFrame=Instance.new("ScrollingFrame",PlayersTab);PlayerListFrame.Size=UDim2.new(1,0,0.8,0);PlayerListFrame.BackgroundTransparency=1
+    local PList=Instance.new("UIListLayout",PlayerListFrame);PList.Padding=UDim.new(0,2)
+    local SelectedPlayerLabel=Instance.new("TextLabel",PlayersTab);SelectedPlayerLabel.Size=UDim2.new(1,0,0,20);SelectedPlayerLabel.Position=UDim2.new(0,0,0.8,0);SelectedPlayerLabel.Text="Target: None";SelectedPlayerLabel.TextColor3=Color3.new(1,1,1);SelectedPlayerLabel.BackgroundTransparency=1
+    local function RefreshPlayers()
+        for _,v in pairs(PlayerListFrame:GetChildren()) do if v:IsA("TextButton") then v:Destroy() end end
+        for _,p in pairs(l__0:GetPlayers()) do
+            if p~=l__1 then
+                local b=Instance.new("TextButton",PlayerListFrame);b.Size=UDim2.new(1,0,0,25);b.Text=p.Name;b.BackgroundColor3=Color3.fromRGB(50,50,60);b.TextColor3=Color3.new(1,1,1)
+                b.MouseButton1Click:Connect(function() _7382_G.GlobalTarget=p;SelectedPlayerLabel.Text="Target: "..p.Name end)
+            end
+        end
+        PlayerListFrame.CanvasSize=UDim2.new(0,0,0,PList.AbsoluteContentSize.Y)
+    end
+    CreateButton(PlayersTab,"Refresh List",RefreshPlayers)
+    CreateButton(PlayersTab,"Follow Target",function() if _7382_G.GlobalTarget then _7382_G.States.Player.FollowTarget=_7382_G.GlobalTarget;Notify("Following ".._7382_G.GlobalTarget.Name) else Notify("No Target Selected") end end)
+    CreateButton(PlayersTab,"Stop Following",function() _7382_G.States.Player.FollowTarget=nil;l__5.CurrentCamera.CameraType=Enum.CameraType.Custom;Notify("Stopped Following") end)
+    
+    local Settings=CreateTab("Settings")
+    CreateButton(Settings,"Save Config",function() _7382_G.ConfigSystem.Save("default");Notify("Config Saved") end)
+    CreateButton(Settings,"Load Config",function() _7382_G.ConfigSystem.Load("default");Notify("Config Loaded") end)
+    CreateToggle(Settings,"Anti-AFK",_7382_G.Settings.System.AntiAFK,function(v) _7382_G.Settings.System.AntiAFK=v end)
+
+    _7382_G.Objects.GUI=TumbaGUI
+    l__2.InputBegan:Connect(function(i,g) 
+        if not g then
+            if i.KeyCode==Enum.KeyCode.RightShift then TumbaGUI.Enabled=not TumbaGUI.Enabled end
+            if i.KeyCode.Name==_7382_G.States.AimAssist.Key then _7382_G.States.AimAssist.Active=not _7382_G.States.AimAssist.Active end
+            if i.KeyCode.Name==_7382_G.States.Misc.Lani.Keybind and _7382_G.States.Misc.Lani.Enabled and _7382_G.GlobalTarget then
+                local r=l__7:FindFirstChild("PaladinAbilityRequest",true)
+                if r then r:FireServer({target=_7382_G.GlobalTarget}) end
+            end
+        end 
+    end)
+end
+InitGUI()
+
+l__4.Heartbeat:Connect(function()
+    -- Aim Assist
+    if _7382_G.States.AimAssist.Enabled and _7382_G.States.AimAssist.Active then
+        local c,d=nil,_7382_G.States.AimAssist.FOV
+        for _,v in pairs(l__0:GetPlayers()) do
+            if v~=l__1 and v.Character and v.Character:FindFirstChild("Humanoid") and v.Character.Humanoid.Health>0 then
+                local p=v.Character:FindFirstChild(_7382_G.States.AimAssist.TargetPart)
+                if p then
+                    local s,o=l__5.CurrentCamera:WorldToViewportPoint(p.Position)
+                    if o then
+                        local m=l__2:GetMouseLocation()
+                        local ds=(Vector2.new(m.X,m.Y)-Vector2.new(s.X,s.Y)).Magnitude
+                        if ds<d then d=ds;c=v end
+                    end
+                end
+            end
+        end
+        if c and c.Character then
+            local p=c.Character[_7382_G.States.AimAssist.TargetPart].Position
+            l__5.CurrentCamera.CFrame=l__5.CurrentCamera.CFrame:Lerp(CFrame.new(l__5.CurrentCamera.CFrame.Position,p),_7382_G.States.AimAssist.Smoothness)
+        end
+    end
+
+    -- ESP
+    if _7382_G.States.ESP.Enabled then
+        for _,p in pairs(l__0:GetPlayers()) do
+            if p~=l__1 and p.Character then
+                local h=p.Character:FindFirstChild("Highlight")
+                if not h then h=Instance.new("Highlight",p.Character);h.FillTransparency=0.5 end
+                h.Enabled=true
+            end
+        end
+    else
+        for _,p in pairs(l__0:GetPlayers()) do if p.Character and p.Character:FindFirstChild("Highlight") then p.Character.Highlight.Enabled=false end end
+    end
+    
+    -- Kit ESP
+    if _7382_G.States.KitESP.Enabled and tick()%1<0.1 then
+        local f=_7382_G.Objects.KitESPFolder or Instance.new("Folder",_7382_G.Objects.GUI);f.Name="KitESPFolder";_7382_G.Objects.KitESPFolder=f
+        f:ClearAllChildren()
+        local function Add(p,c,t) if p then local b=Instance.new("BillboardGui",f);b.Adornee=p;b.Size=UDim2.new(0,50,0,50);b.AlwaysOnTop=true;local l=Instance.new("TextLabel",b);l.Size=UDim2.new(1,0,1,0);l.Text=t;l.TextColor3=c;l.BackgroundTransparency=1 end end
+        for _,v in pairs(l__12:GetTagged("hidden-metal")) do Add(v.PrimaryPart,Color3.new(0.7,0.7,0.7),"Iron") end
+        for _,v in pairs(l__12:GetTagged("bee")) do Add(v.PrimaryPart,Color3.new(1,1,0),"Bee") end
+        for _,v in pairs(l__12:GetTagged("treeOrb")) do Add(v.PrimaryPart,Color3.new(0,1,0),"Tree") end
+        for _,v in pairs(l__5:GetChildren()) do if v.Name=="Thorns" then Add(v.PrimaryPart,Color3.new(0,0.5,0),"Thorns") elseif v.Name=="Mushrooms" then Add(v.PrimaryPart,Color3.new(1,0,0),"Mushroom") end end
+        for _,v in pairs(l__12:GetTagged("alchemy_crystal")) do Add(v.PrimaryPart,Color3.new(0.5,0,1),"Crystal") end
+    end
+
+    -- Player Features
+    if _7382_G.States.Player.Speed and l__1.Character and l__1.Character:FindFirstChild("Humanoid") then
+        l__1.Character.Humanoid.WalkSpeed=_7382_G.States.Player.SpeedValue
+    end
+    
+    if _7382_G.States.Player.Fly and l__1.Character and l__1.Character:FindFirstChild("HumanoidRootPart") then
+        local hrp=l__1.Character.HumanoidRootPart
+        local cam=l__5.CurrentCamera
+        local bv=hrp:FindFirstChild("BPFly") or Instance.new("BodyVelocity",hrp);bv.Name="BPFly";bv.MaxForce=Vector3.new(9e9,9e9,9e9)
+        local move=Vector3.zero
+        if l__2:IsKeyDown(Enum.KeyCode.W) then move=move+cam.CFrame.LookVector end
+        if l__2:IsKeyDown(Enum.KeyCode.S) then move=move-cam.CFrame.LookVector end
+        if l__2:IsKeyDown(Enum.KeyCode.A) then move=move-cam.CFrame.RightVector end
+        if l__2:IsKeyDown(Enum.KeyCode.D) then move=move+cam.CFrame.RightVector end
+        if l__2:IsKeyDown(Enum.KeyCode.Space) then move=move+Vector3.new(0,1,0) end
+        if l__2:IsKeyDown(Enum.KeyCode.LeftShift) then move=move-Vector3.new(0,1,0) end
+        bv.Velocity=move*_7382_G.States.Player.FlySpeed
+    else
+        if l__1.Character and l__1.Character:FindFirstChild("HumanoidRootPart") and l__1.Character.HumanoidRootPart:FindFirstChild("BPFly") then l__1.Character.HumanoidRootPart.BPFly:Destroy() end
+    end
+
+    if _7382_G.States.Player.NoClip and l__1.Character then
+        for _,p in pairs(l__1.Character:GetDescendants()) do if p:IsA("BasePart") then p.CanCollide=false end end
+    end
+
+    if _7382_G.States.Player.AntiKnockback and l__1.Character and l__1.Character:FindFirstChild("HumanoidRootPart") then
+        local hrp=l__1.Character.HumanoidRootPart
+        if hrp.Velocity.Y>0 or hrp.Velocity.Y<0 then hrp.Velocity=Vector3.new(hrp.Velocity.X,0,hrp.Velocity.Z) end
+    end
+
+    if _7382_G.States.Player.Spider and l__1.Character and l__1.Character:FindFirstChild("HumanoidRootPart") then
+        local hrp=l__1.Character.HumanoidRootPart
+        local ray=Ray.new(hrp.Position,hrp.CFrame.LookVector*2)
+        local hit=l__5:FindPartOnRay(ray,l__1.Character)
+        if hit then hrp.Velocity=Vector3.new(hrp.Velocity.X,_7382_G.States.Player.SpiderSpeed,hrp.Velocity.Z) end
+    end
+    
+    if _7382_G.States.Player.SpinBot and l__1.Character and l__1.Character:FindFirstChild("HumanoidRootPart") then
+        l__1.Character.HumanoidRootPart.CFrame=l__1.Character.HumanoidRootPart.CFrame*CFrame.Angles(0,math.rad(_7382_G.States.Player.SpinSpeed),0)
+    end
+    
+    if _7382_G.States.Player.NoFall and l__1.Character and l__1.Character:FindFirstChild("HumanoidRootPart") then
+        local hrp=l__1.Character.HumanoidRootPart
+        if hrp.Velocity.Y<-40 then
+            local ray=Ray.new(hrp.Position,Vector3.new(0,-15,0))
+            if l__5:FindPartOnRay(ray,l__1.Character) then
+                local bv=Instance.new("BodyVelocity",hrp);bv.Velocity=Vector3.new(0,0,0);bv.MaxForce=Vector3.new(0,9e9,0);l__13:AddItem(bv,0.2)
+            end
+        end
+    end
+    
+    if _7382_G.States.Player.FollowTarget and _7382_G.States.Player.FollowTarget.Character and _7382_G.States.Player.FollowTarget.Character:FindFirstChild("HumanoidRootPart") then
+        l__5.CurrentCamera.CameraType=Enum.CameraType.Scriptable
+        l__5.CurrentCamera.CFrame=_7382_G.States.Player.FollowTarget.Character.HumanoidRootPart.CFrame*CFrame.new(0,5,15)
+    end
+
+    -- Combat
+    if _7382_G.States.Combat.Killaura.Enabled then
+        local r=l__7:FindFirstChild("SwordHit",true)
+        if r and l__1.Character then
+            local hrp=l__1.Character:FindFirstChild("HumanoidRootPart")
+            local tool=l__1.Character:FindFirstChildOfClass("Tool")
+            if hrp and tool then
+                for _,v in pairs(l__5:GetChildren()) do
+                    if v:FindFirstChild("Humanoid") and v~=l__1.Character then
+                        local th=v:FindFirstChild("HumanoidRootPart")
+                        if th and (th.Position-hrp.Position).Magnitude<_7382_G.States.Combat.Killaura.Range then
+                            r:FireServer({entityInstance=v,weapon=tool,chargedAttack={chargeRatio=0}})
+                        end
+                    end
+                end
+            end
+        end
+    end
+    
+    if _7382_G.States.Combat.TriggerBot then
+        local m=l__1:GetMouse()
+        if m.Target and m.Target.Parent:FindFirstChild("Humanoid") and m.Target.Parent.Name~=l__1.Name then
+            mouse1click()
+        end
+    end
+    
+    if (_7382_G.States.Player.FastBreak or _7382_G.States.Combat.AutoShoot) and l__2:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) then
+        local t=l__1.Character and l__1.Character:FindFirstChildOfClass("Tool")
+        if t then t:Activate() end
+    end
+
+    -- Farm
+    if _7382_G.States.Misc.AutoFarm then
+        for _,v in pairs(l__5:GetDescendants()) do
+            if v.Name=="hidden-metal-prompt" and v:IsA("ProximityPrompt") then
+                if l__1.Character and l__1.Character:FindFirstChild("HumanoidRootPart") and (v.Parent.Position-l__1.Character.HumanoidRootPart.Position).Magnitude<v.MaxActivationDistance then
+                    fireproximityprompt(v)
+                end
+            end
+        end
+    end
+
+    if _7382_G.States.Misc.ChestSteal.Enabled then
+        local r=l__7:FindFirstChild("ChestGetItem",true)
+        if r and l__1.Character and l__1.Character:FindFirstChild("HumanoidRootPart") then
+            for _,v in pairs(l__12:GetTagged("chest")) do
+                if (v.Position-l__1.Character.HumanoidRootPart.Position).Magnitude<_7382_G.States.Misc.ChestSteal.Range then
+                    local f=v:FindFirstChild("ChestFolderValue") and v.ChestFolderValue.Value
+                    if f then for _,i in pairs(f:GetChildren()) do r:InvokeServer(f,i) end end
+                end
+            end
+        end
+    end
+
+    if _7382_G.States.Cletus.Enabled then
+        local r=l__7:FindFirstChild("CropHarvest",true)
+        if r and l__1.Character and l__1.Character:FindFirstChild("HumanoidRootPart") then
+             for _,v in pairs(l__12:GetTagged("HarvestableCrop")) do
+                if (v.Position-l__1.Character.HumanoidRootPart.Position).Magnitude<_7382_G.States.Cletus.Range then
+                     r:InvokeServer({position=Vector3.new(math.round(v.Position.X/3),math.round(v.Position.Y/3),math.round(v.Position.Z/3))})
+                end
+             end
+        end
+    end
+
+    if _7382_G.States.Misc.AutoDeposit.Enabled and tick()%1<0.1 then
+        local r=l__7:FindFirstChild("ChestGiveItem",true)
+        local chest=l__12:GetTagged("personal-chest")[1]
+        if r and chest and l__1.Character and (chest.Position-l__1.Character.HumanoidRootPart.Position).Magnitude<_7382_G.States.Misc.AutoDeposit.Range then
+            local inv=l__7.Inventories:FindFirstChild(l__1.Name)
+            local pinv=l__7.Inventories:FindFirstChild(l__1.Name.."_personal")
+            if inv and pinv then for _,i in pairs(inv:GetChildren()) do if i.Name:find("iron") or i.Name:find("diamond") or i.Name:find("emerald") then r:InvokeServer(pinv,i) end end end
+        end
+    end
+
+    if _7382_G.States.Eldertree.Enabled then
+        local r=l__7:FindFirstChild("ConsumeTreeOrb",true)
+        if r and l__1.Character then for _,v in pairs(l__12:GetTagged("treeOrb")) do if (v.PrimaryPart.Position-l__1.Character.HumanoidRootPart.Position).Magnitude<_7382_G.States.Eldertree.Range then r:InvokeServer({treeOrbSecret=v:GetAttribute("TreeOrbSecret")}) end end end
+    end
+
+    if _7382_G.States.StarCollector.Enabled then
+        local r=l__7:FindFirstChild("CollectCollectableEntity",true)
+        if r and l__1.Character then for _,v in pairs(l__12:GetTagged("stars")) do if (v.PrimaryPart.Position-l__1.Character.HumanoidRootPart.Position).Magnitude<_7382_G.States.StarCollector.Range then r:FireServer({id=v:GetAttribute("Id"),collectableName=v.Name}) end end end
+    end
+
+    if _7382_G.States.Metal.Enabled and _7382_G.States.Metal.AutoCollect then
+        local r=l__7:FindFirstChild("CollectCollectableEntity",true)
+        if r and l__1.Character then for _,v in pairs(l__12:GetTagged("hidden-metal")) do if v.PrimaryPart and (v.PrimaryPart.Position-l__1.Character.HumanoidRootPart.Position).Magnitude<_7382_G.States.Metal.Range then r:FireServer({id=v:GetAttribute("Id")}) end end end
+    end
+
+    if _7382_G.States.Misc.FameSpam and tick()%2<0.1 then
+        local msg={"TUMBA ON TOP","GET GOOD","EZ","SKILL ISSUE"}
+        pcall(function() l__7.DefaultChatSystemChatEvents.SayMessageRequest:FireServer(msg[math.random(#msg)],"All") end)
+    end
+
+    if _7382_G.States.Misc.FamesMom then
+        for _,p in pairs(l__0:GetPlayers()) do if p~=l__1 and p.Character then local h=p.Character:FindFirstChild("Humanoid");if h then h.BodyWidthScale.Value=3;h.BodyDepthScale.Value=3;h.HeadScale.Value=2.5 end end end
+    end
+    
+    if _7382_G.States.Noelle.Enabled and tick()%1<0.1 then
+        local r=l__7:FindFirstChild("RequestMoveSlime",true)
+        local sf=l__5:FindFirstChild("SlimeDataFolder")
+        if r and sf then
+            local myName=l__1.Name
+            for _,c in pairs(sf:GetChildren()) do if c.Name:sub(1,#myName)==myName then local id=c:GetAttribute("Id") or (c:FindFirstChild("Id") and c.Id.Value);if id then r:InvokeServer({slimeId=id,targetPlayerUserId=l__1.UserId}) end end end
+        end
+    end
+    
+    if _7382_G.States.Beekeeper.Enabled and _7382_G.States.Beekeeper.AutoCatch then
+        local r=l__7:FindFirstChild("PickUpBee",true)
+        if r then
+            for _,v in pairs(l__5:GetDescendants()) do
+                if v.Name=="bee" and v:GetAttribute("BeeId") then
+                    if l__1.Character and (v.Position-l__1.Character.HumanoidRootPart.Position).Magnitude<20 then
+                        r:FireServer({beeId=v:GetAttribute("BeeId")})
+                    end
+                end
+            end
+        end
+    end
+end)
+
+l__2.JumpRequest:Connect(function()
+    if _7382_G.States.Player.InfiniteJump and l__1.Character and l__1.Character:FindFirstChild("Humanoid") then
+        l__1.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+    end
+end)
+
+if not _7382_G.Objects.FishHook then
+    _7382_G.Objects.FishHook=true
+    local s,e=pcall(function()
+        local mt=getrawmetatable(game);setreadonly(mt,false);local old=mt.__namecall
+        mt.__namecall=newcclosure(function(self,...) local m=getnamecallmethod();if m=="FireServer" and self.Name=="PullFishingRod" and _7382_G.States.Fisherman.Enabled then return old(self,{success=true}) end return old(self,...) end)
+        setreadonly(mt,true)
+    end)
+end
+
+l__1.CharacterAdded:Connect(function(c)
+    if _7382_G.States.Misc.AutoKit.Enabled then
+        task.wait(2)
+        local r=l__7:FindFirstChild("Game",true) and l__7.Game.Events:FindFirstChild("KitSelect")
+        if r then r:FireServer(_7382_G.States.Misc.AutoKit.KitName or "yuzi") end
+    end
+end)
+
+if _7382_G.Settings.System.AntiAFK then
+    l__1.Idled:Connect(function()
+        game:GetService("VirtualUser"):CaptureController()
+        game:GetService("VirtualUser"):ClickButton2(Vector2.new())
+    end)
+end
+
+Notify("TUMBA SYSTEM v5.0 LOADED [OBFUSCATED]", 5)
