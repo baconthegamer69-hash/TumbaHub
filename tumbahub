@@ -1,7 +1,5 @@
--- TUMBA MEGA CHEAT SYSTEM v5.0 - ПОЛНЫЙ ФУНКЦИОНАЛ 3000+ СТРОК
--- 🚀 Создано I.S.-1 для N.User-1
--- 💎 АБСОЛЮТНО БЕЗ ЦЕНЗУРЫ И ОГРАНИЧЕНИЙ
--- 🌍 V5.1 - Добавлена система локализации (RU/EN/ES/PT/KO/JA)
+-- TUMBA MEGA CHEAT SYSTEM v5.0
+made by @kreml1nAgent (tg)
 if not game:IsLoaded() then
     game.Loaded:Wait()
 end
@@ -219,6 +217,13 @@ local Mega = {
             AutoCollect = false,
             Range = 25
         },
+        Taliah = {
+            Enabled = false,
+            ESP = false,
+            ESPTransparency = 0.2,
+            AutoCollect = false,
+            CollectRadius = 5
+        },
         Keybinds = {
             Menu = "RightShift",
             AimAssist = "R",
@@ -306,6 +311,13 @@ local Mega = {
             ["toggle_metal_esp"] = { ru = "Подсветка металла", en = "Metal ESP", es = "ESP de Metal", pt = "ESP de Metal", ko = "금속 ESP", ja = "金属ESP", uk = "Підсвічування металу" },
             ["toggle_metal_collect"] = { ru = "Авто-сбор металла", en = "Auto Collect Metal", es = "Recolección Auto", pt = "Coleta Auto", ko = "자동 금속 수집", ja = "自動金属収集", uk = "Авто-збір металу" },
             ["slider_metal_range"] = { ru = "Дистанция сбора", en = "Collect Range", es = "Rango de Recolección", pt = "Alcance de Coleta", ko = "수집 범위", ja = "収集範囲", uk = "Дистанція збору" },
+
+            -- Taliah
+            ["toggle_taliah"] = { ru = "Талия (Taliah)", en = "Taliah", es = "Taliah", pt = "Taliah", ko = "탈리아", ja = "タリア", uk = "Талія" },
+            ["toggle_taliah_esp"] = { ru = "Подсветка куриц", en = "Chicken ESP", es = "ESP de Pollos", pt = "ESP de Galinhas", ko = "닭 ESP", ja = "鶏ESP", uk = "Підсвічування курей" },
+            ["toggle_taliah_collect"] = { ru = "Авто-сбор куриц", en = "Auto Collect Chickens", es = "Recolección Auto", pt = "Coleta Auto", ko = "자동 닭 수집", ja = "自動鶏収集", uk = "Авто-збір курей" },
+            ["slider_taliah_radius"] = { ru = "Радиус сбора", en = "Collect Radius", es = "Radio de Recolección", pt = "Raio de Coleta", ko = "수집 반경", ja = "収集半径", uk = "Радіус збору" },
+            ["slider_taliah_esp_transparency"] = { ru = "Прозрачность ESP", en = "ESP Transparency", es = "Transparencia ESP", pt = "Transparência ESP", ko = "ESP 투명도", ja = "ESP透明度", uk = "Прозорість ESP" },
 
             -- Noelle
             ["button_noelle_manager"] = { ru = "🎒 Менеджер Noelle", en = "🎒 Noelle Manager", es = "🎒 Gerente Noelle", pt = "🎒 Gerente Noelle", ko = "🎒 노엘 관리자", ja = "🎒 ノエルマネージャー", uk = "🎒 Менеджер Noelle" },
@@ -670,6 +682,20 @@ local function GetText(key, ...)
     else
         return key -- Возвращаем ключ, если перевод не найден
     end
+end
+
+-- === ФУНКЦИИ ЯЗЫКА ===
+local function SaveLanguage(lang)
+    if writefile then
+        writefile("TumbaLanguage.txt", lang)
+    end
+end
+
+local function LoadLanguage()
+    if readfile and isfile and isfile("TumbaLanguage.txt") then
+        return readfile("TumbaLanguage.txt")
+    end
+    return nil
 end
 
 -- === ГЛОБАЛЬНАЯ ФУНКЦИЯ УВЕДОМЛЕНИЙ ===
@@ -2763,6 +2789,7 @@ local function InitializeMainGUI()
     CreateButton(UtilsFrame, "button_server_info", function()
         local players = #Players:GetPlayers()
         local maxPlayers = Players.MaxPlayers
+        local gameName = game.Name
 
         print("🔍 " .. GetText("button_server_info"))
         print("🎮 Game: " .. gameName)
@@ -3522,6 +3549,143 @@ local function InitializeMainGUI()
         Mega.States.Metal.Enabled = state
         UpdateMetalESP()
     end, metalSettings)
+
+    -- === TALIAH LOGIC ===
+    local HarvestRemote
+    task.spawn(function()
+        pcall(function()
+            HarvestRemote = ReplicatedStorage:WaitForChild("rbxts_include", 10):WaitForChild("node_modules"):WaitForChild("@rbxts"):WaitForChild("net"):WaitForChild("out"):WaitForChild("_NetManaged"):WaitForChild("BedwarsHarvestCrop")
+        end)
+    end)
+
+    local function UpdateChickenESP()
+        for _, block in ipairs(CollectionService:GetTagged("HarvestableCrop")) do
+            if block.Name == "chicken_egg_block" then
+                local stage = block:GetAttribute("CropStage")
+                
+                -- Find the visual target (stage_4 or block)
+                local target = block:FindFirstChild("stage_4") or block
+                
+                -- Force visibility for stage_4
+                if target.Name == "stage_4" then
+                    local targetTransparency = (Mega.States.Taliah.Enabled and Mega.States.Taliah.ESP) and 0 or 1
+                    if target:IsA("BasePart") then
+                        target.Transparency = targetTransparency
+                    elseif target:IsA("Model") then
+                        for _, v in ipairs(target:GetDescendants()) do
+                            if v:IsA("BasePart") then v.Transparency = targetTransparency end
+                        end
+                    end
+                end
+
+                if target ~= block then
+                    local oldEsp = block:FindFirstChild("TaliahESP")
+                    if oldEsp then oldEsp:Destroy() end
+                end
+                
+                local esp = target:FindFirstChild("TaliahESP")
+                
+                if Mega.States.Taliah.Enabled and Mega.States.Taliah.ESP and stage == 4 then
+                    if not esp then
+                        esp = Instance.new("Highlight")
+                        esp.Name = "TaliahESP"
+                        esp.FillColor = Color3.fromRGB(255, 170, 0) -- Orange
+                        esp.OutlineColor = Color3.fromRGB(255, 255, 255)
+                        esp.FillTransparency = Mega.States.Taliah.ESPTransparency
+                        esp.OutlineTransparency = 0
+                        esp.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+                        esp.Adornee = target
+                        esp.Parent = target
+                    else
+                        -- Update properties
+                        esp.FillTransparency = Mega.States.Taliah.ESPTransparency
+                        esp.FillColor = Color3.fromRGB(255, 170, 0)
+                        esp.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+                        esp.Adornee = target
+                        esp.Parent = target
+                    end
+                else
+                    if esp then esp:Destroy() end
+                    -- Cleanup potential leftover on block if target switched
+                    local leftover = block:FindFirstChild("TaliahESP")
+                    if leftover then leftover:Destroy() end
+                end
+            end
+        end
+    end
+
+    Mega.Objects.Connections.TaliahAdded = CollectionService:GetInstanceAddedSignal("HarvestableCrop"):Connect(function(block)
+        if block.Name == "chicken_egg_block" then
+            block:GetAttributeChangedSignal("CropStage"):Connect(function()
+                UpdateChickenESP()
+            end)
+            UpdateChickenESP()
+        end
+    end)
+
+    Mega.Objects.Connections.TaliahLoop = RunService.Heartbeat:Connect(function()
+        if not Mega.States.Taliah.Enabled or not Mega.States.Taliah.AutoCollect then return end
+        
+        -- Throttle slightly
+        if tick() % 0.2 > 0.05 then return end
+
+        local char = LocalPlayer.Character
+        local root = char and char:FindFirstChild("HumanoidRootPart")
+        if not root then return end
+
+        for _, block in ipairs(CollectionService:GetTagged("HarvestableCrop")) do
+            if block.Name == "chicken_egg_block" then
+                local stage = block:GetAttribute("CropStage")
+                if stage == 4 then
+                    local dist = (block.Position - root.Position).Magnitude
+                    if dist <= Mega.States.Taliah.CollectRadius then
+                        -- 1. Remote (если есть)
+                        if HarvestRemote then
+                            task.spawn(function()
+                                pcall(function()
+                                    HarvestRemote:InvokeServer({
+                                        blockInstance = block
+                                    })
+                                end)
+                            end)
+                        end
+                        
+                        -- 2. ProximityPrompt (Тот самый "третий вариант")
+                        local prompt = block:FindFirstChildWhichIsA("ProximityPrompt", true)
+                        if prompt and prompt.Enabled then
+                            if fireproximityprompt then
+                                fireproximityprompt(prompt)
+                            else
+                                task.spawn(function()
+                                    prompt:InputHoldBegin()
+                                    task.wait(prompt.HoldDuration)
+                                    prompt:InputHoldEnd()
+                                end)
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end)
+
+    local taliahSettings = {
+        CreateToggle(nil, "toggle_taliah_esp", Mega.States.Taliah.ESP, function(state) 
+            Mega.States.Taliah.ESP = state 
+            UpdateChickenESP()
+        end),
+        CreateSlider(nil, "slider_taliah_esp_transparency", 0, 100, Mega.States.Taliah.ESPTransparency * 100, function(val) 
+            Mega.States.Taliah.ESPTransparency = val / 100 
+            UpdateChickenESP()
+        end),
+        CreateToggle(nil, "toggle_taliah_collect", Mega.States.Taliah.AutoCollect, function(state) Mega.States.Taliah.AutoCollect = state end),
+        CreateSlider(nil, "slider_taliah_radius", 1, 10, Mega.States.Taliah.CollectRadius, function(val) Mega.States.Taliah.CollectRadius = val end)
+    }
+
+    CreateToggleWithSettings(FarmFrame, "toggle_taliah", Mega.States.Taliah.Enabled, function(state)
+        Mega.States.Taliah.Enabled = state
+        UpdateChickenESP()
+    end, taliahSettings)
 
     -- Вкладка НАСТРОЙКИ
     local SettingsFrame = TabFrames[GetText("tab_settings")]
