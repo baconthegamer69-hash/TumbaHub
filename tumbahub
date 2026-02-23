@@ -1,5 +1,5 @@
 -- TUMBA MEGA CHEAT SYSTEM v5.0
-made by @kreml1nAgent (tg)
+-- Made by @kreml1nAgent (tg)
 if not game:IsLoaded() then
     game.Loaded:Wait()
 end
