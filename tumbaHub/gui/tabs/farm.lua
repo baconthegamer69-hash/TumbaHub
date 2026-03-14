@@ -9,7 +9,7 @@ if not Mega.States.Beekeeper then Mega.States.Beekeeper = { Enabled = false, Sho
 if not Mega.States.Cletus then Mega.States.Cletus = { Enabled = false, Range = 20, AutoHarvest = false, ESP = false, ESPTransparency = 0.75 } end
 if not Mega.States.Eldertree then Mega.States.Eldertree = { Enabled = false, Range = 30, ESP = false, AutoCollect = false } end
 if not Mega.States.StarCollector then Mega.States.StarCollector = { Enabled = false, Range = 60, ESP = false } end
-if not Mega.States.Metal then Mega.States.Metal = { Enabled = false, ESP = true, AutoCollect = false, Range = 25 } end
+if not Mega.States.Metal then Mega.States.Metal = { Enabled = false, ESP = true, AutoCollect = false, AutoCollectLegit = false, Range = 25 } end
 if not Mega.States.Taliah then Mega.States.Taliah = { Enabled = false, ESP = false, ESPTransparency = 0.2, AutoCollect = false, AutoCollectLegit = false, CollectRadius = 5 } end
 if not Mega.States.Fisherman then Mega.States.Fisherman = { Enabled = false } end
 if not Mega.States.Noelle then Mega.States.Noelle = { Enabled = false, SaveBinds = false, Binds = {} } end
@@ -97,9 +97,20 @@ UI.CreateToggleWithSettings(TabFrame, "toggle_star_collector", "StarCollector.En
 --#endregion
 
 --#region -- Metal Detector
-UI.CreateToggleWithSettings(TabFrame, "toggle_metal", "Metal.Enabled", nil, {
-    UI.CreateToggle(nil, "toggle_metal_esp", "Metal.ESP"),
+task.spawn(function()
+    pcall(function() Mega.LoadModule("features/metal_detector.lua") end)
+end)
+
+UI.CreateToggleWithSettings(TabFrame, "toggle_metal", "Metal.Enabled", function(state)
+    Mega.States.Metal.Enabled = state
+    if Mega.Features.Metal then Mega.Features.Metal.SetEnabled(state) end
+end, {
+    UI.CreateToggle(nil, "toggle_metal_esp", "Metal.ESP", function(state)
+        Mega.States.Metal.ESP = state
+        if Mega.Features.Metal then Mega.Features.Metal.UpdateESP() end
+    end),
     UI.CreateToggle(nil, "toggle_metal_collect", "Metal.AutoCollect"),
+    UI.CreateToggle(nil, "toggle_metal_collect_legit", "Metal.AutoCollectLegit"),
     UI.CreateSlider(nil, "slider_metal_range", "Metal.Range", 5, 100)
 })
 --#endregion
