@@ -171,21 +171,6 @@ connections.AutoHarvestLoop = Services.RunService.Heartbeat:Connect(function()
                             pcall(function() CropHarvestRemote:InvokeServer(unpack(args)) end)
                         end)
                     end
-                    
-                    local prompt = crop:FindFirstChildWhichIsA("ProximityPrompt", true)
-                    if prompt and prompt.Enabled then
-                        if fireproximityprompt then
-                            fireproximityprompt(prompt)
-                        else
-                            task.spawn(function()
-                                pcall(function()
-                                    prompt:InputHoldBegin()
-                                    task.wait(prompt.HoldDuration)
-                                    prompt:InputHoldEnd()
-                                end)
-                            end)
-                        end
-                    end
                 end
             end
         end
