@@ -1,8 +1,6 @@
 -- features/eldertree.lua
 -- Logic for Eldertree (Tree Orbs collection and ESP)
 
-task.wait(2) -- Даем время на инициализацию, чтобы избежать ошибок
-
 if not Mega.Features then Mega.Features = {} end
 Mega.Features.Eldertree = {}
 
@@ -21,10 +19,10 @@ if not Mega.Objects.EldertreeConnections then Mega.Objects.EldertreeConnections 
 local connections = Mega.Objects.EldertreeConnections
 
 -- Очищаем старые коннекты, если скрипт перезапускается
-if connections.MainLoop then connections.MainLoop:Disconnect() end
-if connections.ESPAdded then connections.ESPAdded:Disconnect() end
-connections.MainLoop = nil
-connections.ESPAdded = nil
+for _, conn in pairs(connections) do
+    if typeof(conn) == "RBXScriptConnection" then conn:Disconnect() end
+end
+table.clear(connections)
 
 -- Remote
 local ConsumeTreeOrbRemote
@@ -47,8 +45,6 @@ local ORB_ICON = "rbxassetid://11003449842"
 
 local espCache = {}
 local function ClearESP()
-    if connections.ESPAdded then connections.ESPAdded:Disconnect() end
-    connections.ESPAdded = nil
     espFolder:ClearAllChildren()
     table.clear(espCache)
 end
@@ -73,13 +69,16 @@ local function CreateOrbESP(orb)
     Instance.new("UICorner", img).CornerRadius = UDim.new(0, 4)
     
     local conn = orb.AncestryChanged:Connect(function(_, parent)
-        if not parent then billboard:Destroy() end
+        if not parent then 
+            if espCache[orb] == billboard then espCache[orb] = nil end
+            billboard:Destroy() 
+        end
     end)
     
     espCache[orb] = billboard
     billboard.Destroying:Connect(function() 
         conn:Disconnect() 
-        espCache[orb] = nil
+        if espCache[orb] == billboard then espCache[orb] = nil end
     end)
 end
 
@@ -93,11 +92,18 @@ connections.MainLoop = Services.RunService.Heartbeat:Connect(function()
         lastEspState = currentEspState
         ClearESP()
         if currentEspState then
-            connections.ESPAdded = Services.CollectionService:GetInstanceAddedSignal("treeOrb"):Connect(function(orb)
-                if States.Eldertree.Enabled and States.Eldertree.ESP then CreateOrbESP(orb) end
-            end)
+            if not connections.ESPAdded then
+                connections.ESPAdded = Services.CollectionService:GetInstanceAddedSignal("treeOrb"):Connect(function(orb)
+                    if States.Eldertree.Enabled and States.Eldertree.ESP then CreateOrbESP(orb) end
+                end)
+            end
             for _, orb in ipairs(Services.CollectionService:GetTagged("treeOrb")) do
                 CreateOrbESP(orb)
+            end
+        else
+            if connections.ESPAdded then
+                connections.ESPAdded:Disconnect()
+                connections.ESPAdded = nil
             end
         end
     end
@@ -112,14 +118,18 @@ connections.MainLoop = Services.RunService.Heartbeat:Connect(function()
     local root = char and char:FindFirstChild("HumanoidRootPart")
     if not root then return end
     
-    for _, orb in ipairs(Services.CollectionService:GetTagged("treeOrb")) do
+    local orbs = Services.CollectionService:GetTagged("treeOrb")
+    for _, orb in ipairs(orbs) do
         if orb:IsA("Model") and orb.PrimaryPart then
             local dist = (root.Position - orb.PrimaryPart.Position).Magnitude
             if dist <= States.Eldertree.Range then
                 local secret = orb:GetAttribute("TreeOrbSecret")
                 if secret then
+                    local args = { { treeOrbSecret = secret } }
                     task.spawn(function()
-                        pcall(function() ConsumeTreeOrbRemote:InvokeServer({ treeOrbSecret = secret }) end)
+                        pcall(function() 
+                            ConsumeTreeOrbRemote:InvokeServer(unpack(args)) 
+                        end)
                     end)
                 end
             end
