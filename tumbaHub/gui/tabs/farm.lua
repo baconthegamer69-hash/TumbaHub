@@ -7,7 +7,7 @@ local UI = Mega.UI
 -- Ensure states exist to prevent errors (Fallback defaults)
 if not Mega.States.Beekeeper then Mega.States.Beekeeper = { Enabled = false, ShowIcons = true, ShowHighlight = true, ShowHiveLevels = false, AutoCatch = false } end
 if not Mega.States.Cletus then Mega.States.Cletus = { Enabled = false, Range = 20, AutoHarvest = false, ESP = false, ESPTransparency = 0.75 } end
-if not Mega.States.Eldertree then Mega.States.Eldertree = { Enabled = false, Range = 30, ESP = false } end
+if not Mega.States.Eldertree then Mega.States.Eldertree = { Enabled = false, Range = 30, ESP = false, AutoCollect = false } end
 if not Mega.States.StarCollector then Mega.States.StarCollector = { Enabled = false, Range = 60, ESP = false } end
 if not Mega.States.Metal then Mega.States.Metal = { Enabled = false, ESP = true, AutoCollect = false, Range = 25 } end
 if not Mega.States.Taliah then Mega.States.Taliah = { Enabled = false, ESP = false, ESPTransparency = 0.2, AutoCollect = false, CollectRadius = 5 } end
@@ -64,19 +64,17 @@ end, {
 --#endregion
 
 --#region -- Eldertree
-UI.CreateToggleWithSettings(TabFrame, "toggle_eldertree", "Eldertree.Enabled", function(state)
-    if Mega.Features.Eldertree then
-        Mega.Features.Eldertree.SetEnabled(state)
-    end
+UI.CreateSection(TabFrame, "toggle_eldertree")
+
+UI.CreateToggleWithSettings(TabFrame, "toggle_eldertree_autocollect", "Eldertree.AutoCollect", function(state)
+    if Mega.Features.Eldertree and Mega.Features.Eldertree.SetAutoCollect then Mega.Features.Eldertree.SetAutoCollect(state) end
 end, {
-    UI.CreateToggle(nil, "toggle_eldertree_autocollect", "Eldertree.AutoCollect", function(state)
-        if Mega.Features.Eldertree and Mega.Features.Eldertree.SetAutoCollect then Mega.Features.Eldertree.SetAutoCollect(state) end
-    end),
-    UI.CreateToggle(nil, "toggle_eldertree_esp", "Eldertree.ESP", function()
-        if Mega.Features.Eldertree then Mega.Features.Eldertree.UpdateESP() end
-    end),
     UI.CreateSlider(nil, "slider_eldertree_range", "Eldertree.Range", 5, 100)
 })
+
+UI.CreateToggle(TabFrame, "toggle_eldertree_esp", "Eldertree.ESP", function()
+    if Mega.Features.Eldertree then Mega.Features.Eldertree.UpdateESP() end
+end)
 --#endregion
 
 --#region -- Star Collector
