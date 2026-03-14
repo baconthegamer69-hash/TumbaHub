@@ -1,21 +1,18 @@
 -- features/farmer_cletus.lua
--- Logic for Cletus (Farming) extracted from tumbaHub.lua
+-- Logic for Cletus (Farming) - Robust & Autonomous Version
 
 if not Mega.Features then Mega.Features = {} end
 Mega.Features.Cletus = {}
 
--- Define services locally since Mega.Services might not exist
 local Services = {
     ReplicatedStorage = game:GetService("ReplicatedStorage"),
     CollectionService = game:GetService("CollectionService"),
     RunService = game:GetService("RunService"),
-    Players = game:GetService("Players"),
-    CoreGui = game:GetService("CoreGui")
+    Players = game:GetService("Players")
 }
 local LocalPlayer = Services.Players.LocalPlayer
 local States = Mega.States
 
--- Убедимся, что настройки существуют (fallback)
 if States.Cletus == nil then
     States.Cletus = {
         Enabled = false,
@@ -29,7 +26,6 @@ end
 if not Mega.Objects.CletusConnections then Mega.Objects.CletusConnections = {} end
 local connections = Mega.Objects.CletusConnections
 
--- Очистка старых соединений на случай перезапуска
 for k, conn in pairs(connections) do
     if typeof(conn) == "RBXScriptConnection" then
         conn:Disconnect()
@@ -50,37 +46,6 @@ local vectorHelper = vector
 if not vectorHelper and getgenv then
     pcall(function() vectorHelper = getgenv().vector end)
 end
-if not vectorHelper then
-    vectorHelper = {
-        create = function(x, y, z)
-            return Vector3.new(x, y, z)
-        end
-    }
-end
-
--- ESP Container
-local cletusGui = Services.CoreGui:FindFirstChild("CletusESP_GUI")
-if not cletusGui then
-    cletusGui = Instance.new("ScreenGui")
-    cletusGui.Name = "CletusESP_GUI"
-    cletusGui.Parent = Services.CoreGui
-end
-
-local cletusEspFolder = cletusGui:FindFirstChild("CletusESP")
-if not cletusEspFolder then
-    cletusEspFolder = Instance.new("Folder")
-    cletusEspFolder.Name = "CletusESP"
-    cletusEspFolder.Parent = cletusGui
-end
-
-local espCache = {}
-
-local function RemoveCropESP(crop)
-    if espCache[crop] then
-        espCache[crop]:Destroy()
-        espCache[crop] = nil
-    end
-end
 
 local function UpdateCropESP(crop)
     if not crop or not crop:IsA("BasePart") then return end
@@ -89,61 +54,47 @@ local function UpdateCropESP(crop)
     local isActive = States.Cletus.Enabled and States.Cletus.ESP
     local isReady = stage and stage >= 3
 
+    local existing = crop:FindFirstChild("TumbaCletusESP")
+
     if isActive and isReady then
-        local esp = espCache[crop]
-        if not esp then
-            esp = Instance.new("BoxHandleAdornment")
-            esp.Name = "CropESP"
-            esp.Adornee = crop
-            esp.Size = crop.Size + Vector3.new(0.1, 0.1, 0.1)
-            
-            local color = Color3.fromRGB(0, 255, 0)
-            if crop.Name:lower():find("carrot") then
-                color = Color3.fromRGB(255, 170, 0)
-            elseif crop.Name:lower():find("melon") then
-                color = Color3.fromRGB(170, 255, 127)
-            end
-            esp.Color3 = color
-            esp.AlwaysOnTop = true
-            esp.ZIndex = 5
-            esp.Parent = cletusEspFolder
-            espCache[crop] = esp
+        if not existing then
+            existing = Instance.new("BoxHandleAdornment")
+            existing.Name = "TumbaCletusESP"
+            existing.Adornee = crop
+            existing.Size = crop.Size + Vector3.new(0.1, 0.1, 0.1)
+            existing.AlwaysOnTop = true
+            existing.ZIndex = 5
+            -- Прямая привязка к парту (обходит защиты экзекьюторов на CoreGui)
+            existing.Parent = crop 
         end
-        esp.Transparency = States.Cletus.ESPTransparency
+            
+        local color = Color3.fromRGB(0, 255, 0)
+        if crop.Name:lower():find("carrot") then
+            color = Color3.fromRGB(255, 170, 0)
+        elseif crop.Name:lower():find("melon") then
+            color = Color3.fromRGB(170, 255, 127)
+        end
+        existing.Color3 = color
+        existing.Transparency = States.Cletus.ESPTransparency
     else
-        RemoveCropESP(crop)
+        if existing then existing:Destroy() end
     end
 end
 
-local function RefreshAllESP()
-    for _, crop in ipairs(Services.CollectionService:GetTagged("Crop")) do
-        UpdateCropESP(crop)
-    end
-end
-
-local function OnCropAdded(crop)
+connections.CropAdded = Services.CollectionService:GetInstanceAddedSignal("Crop"):Connect(function(crop)
     if crop:IsA("BasePart") then
-        local conn = crop:GetAttributeChangedSignal("CropStage"):Connect(function()
-            UpdateCropESP(crop)
-        end)
+        local conn = crop:GetAttributeChangedSignal("CropStage"):Connect(function() UpdateCropESP(crop) end)
         table.insert(connections, conn)
-        
-        local ancConn = crop.AncestryChanged:Connect(function(_, parent)
-            if not parent then
-                RemoveCropESP(crop)
-            end
-        end)
-        table.insert(connections, ancConn)
-        
         UpdateCropESP(crop)
     end
-end
-
-connections.CropAdded = Services.CollectionService:GetInstanceAddedSignal("Crop"):Connect(OnCropAdded)
-connections.CropRemoved = Services.CollectionService:GetInstanceRemovedSignal("Crop"):Connect(RemoveCropESP)
+end)
 
 for _, crop in ipairs(Services.CollectionService:GetTagged("Crop")) do
-    OnCropAdded(crop)
+    if crop:IsA("BasePart") then
+        local conn = crop:GetAttributeChangedSignal("CropStage"):Connect(function() UpdateCropESP(crop) end)
+        table.insert(connections, conn)
+        UpdateCropESP(crop)
+    end
 end
 
 -- Автономный наблюдатель за изменениями состояния UI
@@ -158,14 +109,8 @@ connections.StateWatcher = Services.RunService.Heartbeat:Connect(function()
         lastEspState = currentEspState
         lastEspTrans = currentTrans
         
-        if not currentEspState then
-            for crop, esp in pairs(espCache) do
-                esp:Destroy()
-            end
-            table.clear(espCache)
-            cletusEspFolder:ClearAllChildren()
-        else
-            RefreshAllESP()
+        for _, crop in ipairs(Services.CollectionService:GetTagged("Crop")) do
+            UpdateCropESP(crop)
         end
     end
 end)
@@ -182,8 +127,7 @@ connections.AutoHarvestLoop = Services.RunService.Heartbeat:Connect(function()
         local hrp = char and char:FindFirstChild("HumanoidRootPart")
         
         if hrp then
-            local crops = Services.CollectionService:GetTagged("Crop")
-            for _, crop in ipairs(crops) do
+            for _, crop in ipairs(Services.CollectionService:GetTagged("Crop")) do
                 if crop:IsA("BasePart") then
                     local stage = crop:GetAttribute("CropStage")
                     if stage and stage >= 3 then
@@ -193,7 +137,9 @@ connections.AutoHarvestLoop = Services.RunService.Heartbeat:Connect(function()
                             local by = math.round(crop.Position.Y / 3)
                             local bz = math.round(crop.Position.Z / 3)
                             
-                            local args = {{ ["position"] = vectorHelper.create(bx, by, bz) }}
+                            local posObj = (vectorHelper and vectorHelper.create) and vectorHelper.create(bx, by, bz) or Vector3.new(bx, by, bz)
+                            local args = {{ ["position"] = posObj }}
+                            
                             task.spawn(function()
                                 pcall(function() CropHarvestRemote:InvokeServer(unpack(args)) end)
                             end)
