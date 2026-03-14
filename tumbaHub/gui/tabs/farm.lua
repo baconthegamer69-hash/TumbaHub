@@ -8,7 +8,7 @@ local UI = Mega.UI
 if not Mega.States.Beekeeper then Mega.States.Beekeeper = { Enabled = false, ShowIcons = true, ShowHighlight = true, ShowHiveLevels = false, AutoCatch = false } end
 if not Mega.States.Cletus then Mega.States.Cletus = { Enabled = false, Range = 20, AutoHarvest = false, ESP = false, ESPTransparency = 0.75 } end
 if not Mega.States.Eldertree then Mega.States.Eldertree = { Enabled = false, Range = 30, ESP = false, AutoCollect = false } end
-if not Mega.States.StarCollector then Mega.States.StarCollector = { Enabled = false, Range = 60, ESP = false } end
+if not Mega.States.StarCollector then Mega.States.StarCollector = { Enabled = false, Range = 60, ESP = false, AutoCollect = false } end
 if not Mega.States.Metal then Mega.States.Metal = { Enabled = false, ESP = true, AutoCollect = false, AutoCollectLegit = false, Range = 25 } end
 if not Mega.States.Taliah then Mega.States.Taliah = { Enabled = false, ESP = false, ESPTransparency = 0.2, AutoCollect = false, AutoCollectLegit = false, CollectRadius = 5 } end
 if not Mega.States.Fisherman then Mega.States.Fisherman = { Enabled = false } end
@@ -98,6 +98,7 @@ UI.CreateToggleWithSettings(TabFrame, "toggle_star_collector", "StarCollector.En
     Mega.States.StarCollector.Enabled = state
     if Mega.Features.StarCollector then Mega.Features.StarCollector.SetEnabled(state) end
 end, {
+    UI.CreateToggle(nil, "toggle_star_collector_autocollect", "StarCollector.AutoCollect"),
     UI.CreateToggle(nil, "toggle_star_collector_esp", "StarCollector.ESP", function(state)
         Mega.States.StarCollector.ESP = state
         if Mega.Features.StarCollector then Mega.Features.StarCollector.UpdateESP() end
