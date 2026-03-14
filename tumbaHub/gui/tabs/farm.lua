@@ -14,11 +14,6 @@ if not Mega.States.Taliah then Mega.States.Taliah = { Enabled = false, ESP = fal
 if not Mega.States.Fisherman then Mega.States.Fisherman = { Enabled = false } end
 if not Mega.States.Noelle then Mega.States.Noelle = { Enabled = false, SaveBinds = false, Binds = {} } end
 
--- Load feature modules for this tab
-Mega.LoadModule("features/beekeeper.lua")
-Mega.LoadModule("features/farmer_cletus.lua")
-Mega.LoadModule("features/eldertree.lua")
-
 -- Create the container frame for this tab
 local TabFrame = Instance.new("ScrollingFrame")
 TabFrame.Name = tabKey
@@ -33,9 +28,14 @@ TabFrame.Parent = Mega.Objects.ContentContainer
 local ContentLayout = Instance.new("UIListLayout", TabFrame)
 ContentLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 ContentLayout.SortOrder = Enum.SortOrder.LayoutOrder
-ContentLayout.Padding = UDim.new(0, 0)
+ContentLayout.Padding = UDim.new(0, 8)
 
 Mega.Objects.TabFrames[tabKey] = TabFrame
+
+--#region -- Main Farm
+UI.CreateSection(TabFrame, "section_farm_main")
+UI.CreateToggle(TabFrame, "toggle_autofarm", "Misc.AutoFarm")
+--#endregion
 
 --#region -- Beekeeper
 UI.CreateToggleWithSettings(TabFrame, "toggle_beekeeper", "Beekeeper.Enabled", function(state)
@@ -64,17 +64,19 @@ end, {
 --#endregion
 
 --#region -- Eldertree
-UI.CreateSection(TabFrame, "toggle_eldertree")
-
-UI.CreateToggleWithSettings(TabFrame, "toggle_eldertree_autocollect", "Eldertree.AutoCollect", function(state)
-    if Mega.Features.Eldertree and Mega.Features.Eldertree.SetAutoCollect then Mega.Features.Eldertree.SetAutoCollect(state) end
+UI.CreateToggleWithSettings(TabFrame, "toggle_eldertree", "Eldertree.Enabled", function(state)
+    if Mega.Features.Eldertree then
+        Mega.Features.Eldertree.SetEnabled(state)
+    end
 end, {
+    UI.CreateToggle(nil, "toggle_eldertree_autocollect", "Eldertree.AutoCollect", function(state)
+        if Mega.Features.Eldertree and Mega.Features.Eldertree.SetAutoCollect then Mega.Features.Eldertree.SetAutoCollect(state) end
+    end),
+    UI.CreateToggle(nil, "toggle_eldertree_esp", "Eldertree.ESP", function()
+        if Mega.Features.Eldertree then Mega.Features.Eldertree.UpdateESP() end
+    end),
     UI.CreateSlider(nil, "slider_eldertree_range", "Eldertree.Range", 5, 100)
 })
-
-UI.CreateToggle(TabFrame, "toggle_eldertree_esp", "Eldertree.ESP", function()
-    if Mega.Features.Eldertree then Mega.Features.Eldertree.UpdateESP() end
-end)
 --#endregion
 
 --#region -- Star Collector
