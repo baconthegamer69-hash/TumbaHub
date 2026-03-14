@@ -26,11 +26,9 @@ if not Mega.Objects.EldertreeConnections then Mega.Objects.EldertreeConnections 
 local connections = Mega.Objects.EldertreeConnections
 
 -- Очищаем старые коннекты, если скрипт перезапускается
-if connections.MainLoop then connections.MainLoop:Disconnect() end
 if connections.ESPLoop then connections.ESPLoop:Disconnect() end
 if connections.AutoCollectLoop then connections.AutoCollectLoop:Disconnect() end
 if connections.ESPAdded then connections.ESPAdded:Disconnect() end
-connections.MainLoop = nil
 connections.ESPLoop = nil
 connections.AutoCollectLoop = nil
 connections.ESPAdded = nil
@@ -92,11 +90,8 @@ local function CreateOrbESP(orb)
     end)
 end
 
-local lastCheck = 0
 local lastEspState = false
 
-connections.MainLoop = Services.RunService.Heartbeat:Connect(function()
-    -- 1. Полностью автономный контроль ESP
 -- 1. Отдельный цикл для контроля ESP
 connections.ESPLoop = Services.RunService.Heartbeat:Connect(function()
     local currentEspState = (States.Eldertree.Enabled and States.Eldertree.ESP)
@@ -114,7 +109,6 @@ connections.ESPLoop = Services.RunService.Heartbeat:Connect(function()
     end
 end)
 
-    -- 2. Авто-сбор
 -- 2. Отдельная логика вкл/выкл Авто-сбора
 local lastCheck = 0
 connections.AutoCollectLoop = Services.RunService.Heartbeat:Connect(function()
@@ -135,7 +129,6 @@ connections.AutoCollectLoop = Services.RunService.Heartbeat:Connect(function()
                 if secret then
                     local args = { { treeOrbSecret = secret } }
                     task.spawn(function()
-                        pcall(function() ConsumeTreeOrbRemote:InvokeServer({ treeOrbSecret = secret }) end)
                         pcall(function() ConsumeTreeOrbRemote:InvokeServer(unpack(args)) end)
                     end)
                 end
@@ -145,14 +138,12 @@ connections.AutoCollectLoop = Services.RunService.Heartbeat:Connect(function()
 end)
 
 -- Оставляем эти функции для обратной совместимости, чтобы ничего не сломалось
--- если другие скрипты попытаются их вызвать, но логика уже обрабатывается в MainLoop
 -- если другие скрипты попытаются их вызвать, но логика уже обрабатывается автономно
 function Mega.Features.Eldertree.SetEnabled(state)
     States.Eldertree.Enabled = state
 end
 
 function Mega.Features.Eldertree.UpdateESP()
-    -- Пусто, так как MainLoop автоматически обнаружит изменение States.Eldertree.ESP
     -- Пусто, так как ESPLoop автоматически обнаружит изменение States.Eldertree.ESP
 end
 
