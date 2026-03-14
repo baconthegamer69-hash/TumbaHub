@@ -144,9 +144,21 @@ UI.CreateToggle(TabFrame, "toggle_autofish", "Fisherman.Enabled")
 --#endregion
 
 --#region -- Noelle
-UI.CreateSection(TabFrame, "noelle_title")
-UI.CreateToggle(TabFrame, "toggle_noelle_save_binds", "Noelle.SaveBinds")
-UI.CreateButton(TabFrame, "button_noelle_manager", function()
-    Mega.ShowNotification("Noelle Manager is not implemented yet.", 3)
+local noelleContainer = Instance.new("Frame")
+noelleContainer.Name = "NoelleContainer"
+noelleContainer.Size = UDim2.new(1, 0, 0, 250)
+noelleContainer.BackgroundTransparency = 1
+Mega.Objects.NoelleContainer = noelleContainer
+
+task.spawn(function()
+    pcall(function() Mega.LoadModule("features/noelle.lua") end)
 end)
+
+UI.CreateToggleWithSettings(TabFrame, "toggle_noelle", "Noelle.Enabled", function(state)
+    Mega.States.Noelle.Enabled = state
+    if Mega.Features.Noelle and Mega.Features.Noelle.SetEnabled then Mega.Features.Noelle.SetEnabled(state) end
+end, {
+    UI.CreateToggle(nil, "toggle_noelle_save_binds", "Noelle.SaveBinds"),
+    noelleContainer
+})
 --#endregion
