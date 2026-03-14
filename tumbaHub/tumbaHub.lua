@@ -68,10 +68,10 @@ Mega.LoadModule("features/beekeeper.lua")
 Mega.LoadModule("features/farmer_cletus.lua")
 Mega.LoadModule("features/taliah.lua")
 Mega.LoadModule("features/metal_detector.lua")
+Mega.LoadModule("features/stella_star_collector.lua")
 
 -- Load the main GUI
 Mega.LoadModule("gui/main_window.lua")
 
 print("🔥 TUMBA MEGA SYSTEM (Refactored) LOADED SUCCESSFULLY!")
-print("💎 Created by: I.S.-1")
 print("🎮 Use RightShift to open the menu")
