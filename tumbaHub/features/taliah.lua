@@ -4,7 +4,12 @@
 if not Mega.Features then Mega.Features = {} end
 Mega.Features.Taliah = {}
 
-local Services = Mega.Services
+local Services = {
+    ReplicatedStorage = game:GetService("ReplicatedStorage"),
+    CollectionService = game:GetService("CollectionService"),
+    RunService = game:GetService("RunService"),
+    Players = game:GetService("Players")
+}
 local LocalPlayer = Services.Players.LocalPlayer
 local States = Mega.States
 
@@ -21,6 +26,14 @@ end
 
 if not Mega.Objects.TaliahConnections then Mega.Objects.TaliahConnections = {} end
 local connections = Mega.Objects.TaliahConnections
+
+-- Очистка старых соединений на случай перезапуска
+for k, conn in pairs(connections) do
+    if typeof(conn) == "RBXScriptConnection" then
+        conn:Disconnect()
+    end
+end
+table.clear(connections)
 
 -- Remote
 local HarvestRemote
@@ -86,16 +99,46 @@ local function UpdateChickenESP()
     end
 end
 
-function Mega.Features.Taliah.UpdateESP()
-    UpdateChickenESP()
+-- Подключаем события для обновления ESP при спавне новых куриц или изменении стадии
+local function OnCropAdded(block)
+    if block.Name == "chicken_egg_block" then
+        local conn = block:GetAttributeChangedSignal("CropStage"):Connect(function()
+            UpdateChickenESP()
+        end)
+        table.insert(connections, conn)
+        UpdateChickenESP()
+    end
 end
 
+connections.TaliahAdded = Services.CollectionService:GetInstanceAddedSignal("HarvestableCrop"):Connect(OnCropAdded)
+
+for _, block in ipairs(Services.CollectionService:GetTagged("HarvestableCrop")) do
+    OnCropAdded(block)
+end
+
+-- Автономный наблюдатель за изменениями состояния UI
+local lastEspState = false
+local lastEspTrans = States.Taliah.ESPTransparency
+
+connections.StateWatcher = Services.RunService.Heartbeat:Connect(function()
+    local currentEspState = States.Taliah.Enabled and States.Taliah.ESP
+    local currentTrans = States.Taliah.ESPTransparency
+    
+    if currentEspState ~= lastEspState or currentTrans ~= lastEspTrans then
+        lastEspState = currentEspState
+        lastEspTrans = currentTrans
+        UpdateChickenESP()
+    end
+end)
+
+-- Автономный цикл сбора
 local lastTaliahCheck = 0
-local function AutoCollectLoop()
+connections.AutoCollectLoop = Services.RunService.Heartbeat:Connect(function()
     if not States.Taliah.Enabled or not States.Taliah.AutoCollect then return end
     
     -- Небольшой троттлинг для производительности
-    if tick() % 0.2 > 0.05 then return end
+    if tick() - lastTaliahCheck < 0.1 then return end
+    lastTaliahCheck = tick()
 
     local char = LocalPlayer.Character
     local root = char and char:FindFirstChild("HumanoidRootPart")
@@ -125,9 +168,11 @@ local function AutoCollectLoop()
                             fireproximityprompt(prompt)
                         else
                             task.spawn(function()
-                                prompt:InputHoldBegin()
-                                task.wait(prompt.HoldDuration)
-                                prompt:InputHoldEnd()
+                                pcall(function()
+                                    prompt:InputHoldBegin()
+                                    task.wait(prompt.HoldDuration)
+                                    prompt:InputHoldEnd()
+                                end)
                             end)
                         end
                     end
@@ -135,40 +180,13 @@ local function AutoCollectLoop()
             end
         end
     end
-end
+end)
 
+-- Пустые функции для обратной совместимости, чтобы UI не выдавал ошибку,
+-- если он попытается их вызвать. Вся логика теперь автономна.
 function Mega.Features.Taliah.SetEnabled(state)
     States.Taliah.Enabled = state
-    UpdateChickenESP()
-    
-    if state then
-        if not connections.TaliahAdded then
-            connections.TaliahAdded = Services.CollectionService:GetInstanceAddedSignal("HarvestableCrop"):Connect(function(block)
-                if block.Name == "chicken_egg_block" then
-                    block:GetAttributeChangedSignal("CropStage"):Connect(function()
-                        UpdateChickenESP()
-                    end)
-                    UpdateChickenESP()
-                end
-            end)
-        end
-        
-        if not connections.TaliahLoop then
-            connections.TaliahLoop = Services.RunService.Heartbeat:Connect(AutoCollectLoop)
-        end
-    else
-        if connections.TaliahAdded then
-            connections.TaliahAdded:Disconnect()
-            connections.TaliahAdded = nil
-        end
-        if connections.TaliahLoop then
-            connections.TaliahLoop:Disconnect()
-            connections.TaliahLoop = nil
-        end
-    end
 end
 
--- Инициализация, если уже включено в конфигурации
-if States.Taliah.Enabled then
-    Mega.Features.Taliah.SetEnabled(true)
+function Mega.Features.Taliah.UpdateESP()
 end
