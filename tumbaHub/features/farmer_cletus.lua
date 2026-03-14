@@ -1,18 +1,10 @@
 -- features/farmer_cletus.lua
 -- Logic for Cletus (Farming) - Original tumbaHub.lua Logic
 
-if not Mega.Features then Mega.Features = {} end
 Mega.Features.Cletus = {}
 
-local Services = {
-    ReplicatedStorage = game:GetService("ReplicatedStorage"),
-    CollectionService = game:GetService("CollectionService"),
-    RunService = game:GetService("RunService"),
-    Players = game:GetService("Players"),
-    CoreGui = game:GetService("CoreGui")
-}
-
-local LocalPlayer = Services.Players.LocalPlayer
+local Services = Mega.Services
+local LocalPlayer = Services.LocalPlayer
 local States = Mega.States
 
 -- Remote
@@ -26,13 +18,10 @@ end)
 local vector = vector or {create = function(x, y, z) return Vector3.new(x, y, z) end}
 
 -- Cletus ESP Logic
-local cletusEspFolder = Instance.new("Folder")
-cletusEspFolder.Name = "CletusESP"
-
--- Попытка прикрепить к интерфейсу, как это было в оригинале
-if Mega.Objects.GUI then
-    cletusEspFolder.Parent = Mega.Objects.GUI
-else
+local cletusEspFolder = Services.CoreGui:FindFirstChild("CletusESP")
+if not cletusEspFolder then
+    cletusEspFolder = Instance.new("Folder")
+    cletusEspFolder.Name = "CletusESP"
     cletusEspFolder.Parent = Services.CoreGui
 end
 
@@ -131,7 +120,7 @@ Mega.Objects.CletusConnections.Loop = Services.RunService.Heartbeat:Connect(func
             if hrp then
                 local crops = Services.CollectionService:GetTagged("Crop")
                 for _, crop in ipairs(crops) do
-                    if crop:IsA("BasePart") then
+                    if crop:IsA("BasePart") and crop.Parent then
                         local stage = crop:GetAttribute("CropStage")
                         if stage and stage >= 3 then
                             local dist = (hrp.Position - crop.Position).Magnitude
