@@ -27,10 +27,27 @@ function Mega.LoadModule(path)
         return
     end
 
-    local url = baseURL .. path
-    local success, content = pcall(function() return game:HttpGet(url) end)
+    local content = nil
+    local success = false
+    
+    -- 1. Сначала пробуем загрузить локальный файл (для тестов в VS Code)
+    if isfile and readfile then
+        local localPath = "tumbaHub/" .. path
+        if isfile(localPath) then
+            success, content = pcall(function() return readfile(localPath) end)
+        elseif isfile(path) then
+            success, content = pcall(function() return readfile(path) end)
+        end
+    end
 
-    if success and content and not content:find("404: Not Found") then
+    -- 2. Если локального файла нет, качаем с GitHub
+    if not success or not content then
+        local url = baseURL .. path
+        success, content = pcall(function() return game:HttpGet(url) end)
+        if success and content:find("404: Not Found") then success = false; content = nil end
+    end
+
+    if success and content then
         -- Wrap the module content in a function to pass the Mega table
         -- and control the environment.
         local chunk, err = loadstring("return function(Mega, game, script) " .. content .. " end")
