@@ -1,6 +1,8 @@
 -- features/eldertree.lua
 -- Logic for Eldertree (Tree Orbs collection and ESP)
 
+task.wait(2) -- Даем время на инициализацию, чтобы избежать ошибок
+
 if not Mega.Features then Mega.Features = {} end
 Mega.Features.Eldertree = {}
 
@@ -17,6 +19,12 @@ local States = Mega.States
 -- Ensure connection container exists
 if not Mega.Objects.EldertreeConnections then Mega.Objects.EldertreeConnections = {} end
 local connections = Mega.Objects.EldertreeConnections
+
+-- Очищаем старые коннекты, если скрипт перезапускается
+if connections.MainLoop then connections.MainLoop:Disconnect() end
+if connections.ESPAdded then connections.ESPAdded:Disconnect() end
+connections.MainLoop = nil
+connections.ESPAdded = nil
 
 -- Remote
 local ConsumeTreeOrbRemote
@@ -37,14 +45,17 @@ end
 
 local ORB_ICON = "rbxassetid://11003449842"
 
+local espCache = {}
 local function ClearESP()
     if connections.ESPAdded then connections.ESPAdded:Disconnect() end
     connections.ESPAdded = nil
     espFolder:ClearAllChildren()
+    table.clear(espCache)
 end
 
 local function CreateOrbESP(orb)
     if not orb or not orb.PrimaryPart then return end
+    if espCache[orb] then return end
     
     local billboard = Instance.new("BillboardGui")
     billboard.Adornee = orb.PrimaryPart
@@ -64,27 +75,35 @@ local function CreateOrbESP(orb)
     local conn = orb.AncestryChanged:Connect(function(_, parent)
         if not parent then billboard:Destroy() end
     end)
-    billboard.Destroying:Connect(function() conn:Disconnect() end)
-end
-
-local function EnableESP()
-    ClearESP()
-    if not States.Eldertree.Enabled or not States.Eldertree.ESP then return end
     
-    connections.ESPAdded = Services.CollectionService:GetInstanceAddedSignal("treeOrb"):Connect(function(orb)
-        CreateOrbESP(orb)
+    espCache[orb] = billboard
+    billboard.Destroying:Connect(function() 
+        conn:Disconnect() 
+        espCache[orb] = nil
     end)
-    
-    for _, orb in ipairs(Services.CollectionService:GetTagged("treeOrb")) do
-        CreateOrbESP(orb)
-    end
 end
 
--- Auto Collect Logic
 local lastCheck = 0
-local function AutoCollectLoop()
-    if not States.Eldertree.Enabled then return end
-    if not ConsumeTreeOrbRemote then return end
+local lastEspState = false
+
+connections.MainLoop = Services.RunService.Heartbeat:Connect(function()
+    -- 1. Полностью автономный контроль ESP
+    local currentEspState = (States.Eldertree.Enabled and States.Eldertree.ESP)
+    if currentEspState ~= lastEspState then
+        lastEspState = currentEspState
+        ClearESP()
+        if currentEspState then
+            connections.ESPAdded = Services.CollectionService:GetInstanceAddedSignal("treeOrb"):Connect(function(orb)
+                if States.Eldertree.Enabled and States.Eldertree.ESP then CreateOrbESP(orb) end
+            end)
+            for _, orb in ipairs(Services.CollectionService:GetTagged("treeOrb")) do
+                CreateOrbESP(orb)
+            end
+        end
+    end
+
+    -- 2. Авто-сбор
+    if not States.Eldertree.Enabled or not ConsumeTreeOrbRemote then return end
     
     if tick() - lastCheck < 0.1 then return end
     lastCheck = tick()
@@ -106,28 +125,14 @@ local function AutoCollectLoop()
             end
         end
     end
-end
+end)
 
+-- Оставляем эти функции для обратной совместимости, чтобы ничего не сломалось
+-- если другие скрипты попытаются их вызвать, но логика уже обрабатывается в MainLoop
 function Mega.Features.Eldertree.SetEnabled(state)
     States.Eldertree.Enabled = state
-    EnableESP()
-    
-    if state then
-        if not connections.Loop then
-            connections.Loop = Services.RunService.Heartbeat:Connect(AutoCollectLoop)
-        end
-    else
-        if connections.Loop then
-            connections.Loop:Disconnect()
-            connections.Loop = nil
-        end
-    end
 end
 
 function Mega.Features.Eldertree.UpdateESP()
-    EnableESP()
-end
-
-if States.Eldertree.Enabled then
-    Mega.Features.Eldertree.SetEnabled(true)
+    -- Пусто, так как MainLoop автоматически обнаружит изменение States.Eldertree.ESP
 end
