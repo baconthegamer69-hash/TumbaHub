@@ -1,0 +1,50 @@
+-- gui/tabs/combat.lua
+-- Content for the "COMBAT" tab
+
+local tabKey = "tab_combat"
+local UI = Mega.UI
+
+-- Create the container frame for this tab
+local TabFrame = Instance.new("ScrollingFrame")
+TabFrame.Name = tabKey
+TabFrame.Size = UDim2.new(1, 0, 1, 0)
+TabFrame.BackgroundTransparency = 1
+TabFrame.BorderSizePixel = 0
+TabFrame.ScrollBarThickness = 4
+TabFrame.ScrollBarImageColor3 = Mega.Settings.Menu.AccentColor
+TabFrame.Visible = false
+TabFrame.Parent = Mega.Objects.ContentContainer
+
+local ContentLayout = Instance.new("UIListLayout", TabFrame)
+ContentLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+ContentLayout.SortOrder = Enum.SortOrder.LayoutOrder
+ContentLayout.Padding = UDim.new(0, 0)
+
+-- Add this frame to the global list of tab frames
+Mega.Objects.TabFrames[tabKey] = TabFrame
+
+--#region -- Automation
+UI.CreateSection(TabFrame, "section_combat_auto")
+
+UI.CreateToggle(TabFrame, "toggle_triggerbot", "Combat.TriggerBot")
+UI.CreateToggle(TabFrame, "toggle_autoshoot", "Combat.AutoShoot")
+UI.CreateToggle(TabFrame, "toggle_rapidfire", "Combat.RapidFire")
+--#endregion
+
+--#region -- Accuracy
+UI.CreateSection(TabFrame, "section_combat_accuracy")
+
+UI.CreateToggle(TabFrame, "toggle_norecoil", "Combat.NoRecoil")
+UI.CreateToggle(TabFrame, "toggle_nospread", "Combat.NoSpread")
+--#endregion
+
+--#region -- Killaura
+UI.CreateSection(TabFrame, "section_combat_killaura")
+
+UI.CreateToggleWithSettings(TabFrame, "toggle_killaura", "Combat.Killaura.Enabled", nil, {
+    UI.CreateSlider(nil, "slider_killaura_range", "Combat.Killaura.Range", 5, 100),
+    UI.CreateSlider(nil, "slider_killaura_delay", "Combat.Killaura.Delay", 0, 1000),
+    UI.CreateKeybindButton(nil, "keybind_killaura", "Keybinds.Killaura")
+})
+--#endregion
+
