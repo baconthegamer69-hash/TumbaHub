@@ -162,11 +162,19 @@ local function InitializeNoelleUI()
         
         if slime.Icon then
             local iconImg = Instance.new("ImageLabel")
-            iconImg.Size = UDim2.new(0, 30, 0, 30)
-            iconImg.Position = UDim2.new(0, 10, 0.5, -15)
+            iconImg.Name = "Icon"
+            iconImg.Size = UDim2.new(0, 26, 0, 26)
+            iconImg.Position = UDim2.new(0, 15, 0.5, -13)
             iconImg.BackgroundTransparency = 1
             iconImg.Image = slime.Icon
+            iconImg.ScaleType = Enum.ScaleType.Fit
+            iconImg.ZIndex = 2
             iconImg.Parent = btn
+            
+            btn.TextXAlignment = Enum.TextXAlignment.Left
+            local padding = Instance.new("UIPadding")
+            padding.PaddingLeft = UDim.new(0, 50)
+            padding.Parent = btn
         end
         
         btn.MouseButton1Click:Connect(function()
