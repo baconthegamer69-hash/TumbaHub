@@ -48,6 +48,7 @@ Mega.Localization = {
         ["toggle_eldertree"] = { ru = "Элдертри (Eldertree)", en = "Eldertree", es = "Eldertree", pt = "Eldertree", ko = "엘더트리", ja = "エルダーツリー", uk = "Елдертрі" },
         ["slider_eldertree_range"] = { ru = "Дистанция сбора", en = "Collect Range", es = "Rango de Recolección", pt = "Alcance de Coleta", ko = "수집 범위", ja = "収集範囲", uk = "Дистанція збору" },
         ["toggle_eldertree_esp"] = { ru = "Подсветка сфер", en = "Orb ESP", es = "ESP de Orbes", pt = "ESP de Orbes", ko = "오브 ESP", ja = "オーブESP", uk = "Підсвічування сфер" },
+        ["toggle_eldertree_autocollect"] = { ru = "Авто-сбор сфер", en = "Auto Collect Orbs", es = "Auto Recolectar Orbes", pt = "Auto Coletar Orbes", ko = "오브 자동 수집", ja = "オーブ自動収集", uk = "Авто-збір сфер" },
         ["toggle_star_collector"] = { ru = "Звездный Коллекционер (Star Collector)", en = "Star Collector", es = "Coleccionista de Estrellas", pt = "Coletor de Estrelas", ko = "스타 컬렉터", ja = "スターコレクター", uk = "Зоряний Колекціонер" },
         ["slider_star_collector_range"] = { ru = "Дистанция сбора", en = "Collect Range", es = "Rango de Recolección", pt = "Alcance de Coleta", ko = "수집 범위", ja = "収集範囲", uk = "Дистанція збору" },
         ["toggle_star_collector_esp"] = { ru = "Подсветка звезд", en = "Star ESP", es = "ESP de Estrellas", pt = "ESP de Estrelas", ko = "별 ESP", ja = "スターESP", uk = "Підсвічування зірок" },
@@ -58,7 +59,8 @@ Mega.Localization = {
         ["slider_metal_range"] = { ru = "Дистанция сбора", en = "Collect Range", es = "Rango de Recolección", pt = "Alcance de Coleta", ko = "수집 범위", ja = "収集範囲", uk = "Дистанція збору" },
         ["toggle_taliah"] = { ru = "Талия (Taliah)", en = "Taliah", es = "Taliah", pt = "Taliah", ko = "탈리아", ja = "タリア", uk = "Талія" },
         ["toggle_taliah_esp"] = { ru = "Подсветка куриц", en = "Chicken ESP", es = "ESP de Pollos", pt = "ESP de Galinhas", ko = "닭 ESP", ja = "鶏ESP", uk = "Підсвічування курей" },
-        ["toggle_taliah_collect"] = { ru = "Авто-сбор куриц", en = "Auto Collect Chickens", es = "Recolección Auto", pt = "Coleta Auto", ko = "자동 닭 수집", ja = "自動鶏収集", uk = "Авто-збір курей" },
+        ["toggle_taliah_collect"] = { ru = "Авто-сбор куриц", en = "Auto Chickens", es = "Recolección Auto", pt = "Coleta Auto", ko = "자동 닭 수집", ja = "自動鶏収集", uk = "Авто-збір курей" },
+        ["toggle_taliah_collect_legit"] = { ru = "Авто-сбор куриц (Legit)", en = "Auto Chickens (legit)", es = "Recolección Auto (Legit)", pt = "Coleta Auto (Legit)", ko = "자동 닭 수집 (Legit)", ja = "自動鶏収集 (Legit)", uk = "Авто-збір курей (Legit)" },
         ["slider_taliah_radius"] = { ru = "Радиус сбора", en = "Collect Radius", es = "Radio de Recolección", pt = "Raio de Coleta", ko = "수집 반경", ja = "収集半径", uk = "Радіус збору" },
         ["slider_taliah_esp_transparency"] = { ru = "Прозрачность ESP", en = "ESP Transparency", es = "Transparencia ESP", pt = "Transparência ESP", ko = "ESP 투명도", ja = "ESP透明度", uk = "Прозорість ESP" },
         ["button_noelle_manager"] = { ru = "🎒 Менеджер Noelle", en = "🎒 Noelle Manager", es = "🎒 Gerente Noelle", pt = "🎒 Gerente Noelle", ko = "🎒 노엘 관리자", ja = "🎒 ノエルマネージャー", uk = "🎒 Менеджер Noelle" },
@@ -314,4 +316,3 @@ end
 
 -- Load saved language on startup
 Mega.Localization.CurrentLanguage = Mega.LoadLanguage()
-
