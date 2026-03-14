@@ -216,8 +216,14 @@ local function InitializeNoelleUI()
                 btn.BackgroundColor3 = isBound and Color3.fromRGB(0, 200, 100) or Color3.fromRGB(40, 45, 60)
                 
                 btn.Text = p.Name
-                btn.TextColor3 = Color3.new(1,1,1)
-                btn.Font = Enum.Font.Gotham
+                
+                if p.Team and p.Team.TeamColor then
+                    btn.TextColor3 = p.Team.TeamColor.Color
+                else
+                    btn.TextColor3 = Color3.new(1,1,1)
+                end
+                
+                btn.Font = Enum.Font.GothamBold
                 btn.TextSize = 14
                 btn.Parent = PlayerScroll
                 Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
@@ -225,6 +231,19 @@ local function InitializeNoelleUI()
                 btn.MouseButton1Click:Connect(function()
                     States.Noelle.Binds[currentSelectedSlimeType] = p.UserId
                     RefreshPlayerList()
+                end)
+                
+                local teamConn
+                teamConn = p:GetPropertyChangedSignal("Team"):Connect(function()
+                    if p.Team and p.Team.TeamColor then
+                        btn.TextColor3 = p.Team.TeamColor.Color
+                    else
+                        btn.TextColor3 = Color3.new(1,1,1)
+                    end
+                end)
+                
+                btn.Destroying:Connect(function()
+                    if teamConn then teamConn:Disconnect() end
                 end)
             end
         end
