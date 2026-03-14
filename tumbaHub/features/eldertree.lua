@@ -94,13 +94,13 @@ local lastEspState = false
 
 -- 1. Отдельный цикл для контроля ESP
 connections.ESPLoop = Services.RunService.Heartbeat:Connect(function()
-    local currentEspState = States.Eldertree.ESP
+    local currentEspState = States.Eldertree.Enabled and States.Eldertree.ESP
     if currentEspState ~= lastEspState then
         lastEspState = currentEspState
         ClearESP()
         if currentEspState then
             connections.ESPAdded = Services.CollectionService:GetInstanceAddedSignal("treeOrb"):Connect(function(orb)
-                if States.Eldertree.ESP then CreateOrbESP(orb) end
+                if States.Eldertree.Enabled and States.Eldertree.ESP then CreateOrbESP(orb) end
             end)
             for _, orb in ipairs(Services.CollectionService:GetTagged("treeOrb")) do
                 CreateOrbESP(orb)
@@ -112,7 +112,7 @@ end)
 -- 2. Отдельная логика вкл/выкл Авто-сбора
 local lastCheck = 0
 connections.AutoCollectLoop = Services.RunService.Heartbeat:Connect(function()
-    if not States.Eldertree.AutoCollect or not ConsumeTreeOrbRemote then return end
+    if not States.Eldertree.Enabled or not States.Eldertree.AutoCollect or not ConsumeTreeOrbRemote then return end
     
     if tick() - lastCheck < 0.1 then return end
     lastCheck = tick()
