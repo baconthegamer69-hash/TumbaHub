@@ -64,18 +64,28 @@ end, {
 --#endregion
 
 --#region -- Eldertree
+task.spawn(function()
+    pcall(function() Mega.LoadModule("features/eldertree.lua") end)
+    pcall(function() Mega.LoadModule("eldertree.lua") end)
+end)
+
 UI.CreateToggleWithSettings(TabFrame, "toggle_eldertree", "Eldertree.Enabled", function(state)
+    Mega.States.Eldertree.Enabled = state
     if Mega.Features.Eldertree then
         Mega.Features.Eldertree.SetEnabled(state)
     end
 end, {
     UI.CreateToggle(nil, "toggle_eldertree_autocollect", "Eldertree.AutoCollect", function(state)
+        Mega.States.Eldertree.AutoCollect = state
         if Mega.Features.Eldertree and Mega.Features.Eldertree.SetAutoCollect then Mega.Features.Eldertree.SetAutoCollect(state) end
     end),
-    UI.CreateToggle(nil, "toggle_eldertree_esp", "Eldertree.ESP", function()
-        if Mega.Features.Eldertree then Mega.Features.Eldertree.UpdateESP() end
+    UI.CreateToggle(nil, "toggle_eldertree_esp", "Eldertree.ESP", function(state)
+        Mega.States.Eldertree.ESP = state
+        if Mega.Features.Eldertree and Mega.Features.Eldertree.UpdateESP then Mega.Features.Eldertree.UpdateESP() end
     end),
-    UI.CreateSlider(nil, "slider_eldertree_range", "Eldertree.Range", 5, 100)
+    UI.CreateSlider(nil, "slider_eldertree_range", "Eldertree.Range", 5, 100, function(val)
+        Mega.States.Eldertree.Range = val
+    end)
 })
 --#endregion
 
