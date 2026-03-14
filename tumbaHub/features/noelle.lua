@@ -135,9 +135,9 @@ local function InitializeNoelleUI()
     end)
 
     local SLIME_TYPES = {
-        { Name = "Heal Slime", Type = 0, Color = Color3.fromRGB(50, 255, 100), Icon = "rbxassetid://15295059428" },
+        { Name = "Heal Slime", Type = 0, Color = Color3.fromRGB(255, 230, 50), Icon = "rbxassetid://15295059428" },
         { Name = "Void Slime", Type = 1, Color = Color3.fromRGB(150, 50, 255), Icon = "rbxassetid://15295057154" },
-        { Name = "Sticky Slime", Type = 2, Color = Color3.fromRGB(255, 150, 50), Icon = "rbxassetid://15295064061" },
+        { Name = "Sticky Slime", Type = 2, Color = Color3.fromRGB(50, 255, 100), Icon = "rbxassetid://15295064061" },
         { Name = "Frosty Slime", Type = 3, Color = Color3.fromRGB(50, 200, 255), Icon = "rbxassetid://15295050177" },
     }
 
