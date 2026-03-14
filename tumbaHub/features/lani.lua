@@ -74,7 +74,10 @@ local function InitializeLaniUI()
             if p ~= LocalPlayer then
                 local btn = Instance.new("TextButton")
                 btn.Size = UDim2.new(0.95, 0, 0, 35)
-                btn.BackgroundColor3 = Color3.fromRGB(40, 45, 60)
+                
+                local isTarget = (States.Misc.Lani.Target == p)
+                btn.BackgroundColor3 = isTarget and Color3.fromRGB(0, 200, 100) or Color3.fromRGB(40, 45, 60)
+                
                 btn.Text = p.Name
                 btn.TextColor3 = Color3.new(1,1,1)
                 btn.Font = Enum.Font.Gotham
@@ -83,8 +86,14 @@ local function InitializeLaniUI()
                 Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
                 
                 btn.MouseButton1Click:Connect(function()
-                    States.Misc.Lani.Target = p
-                    LaniTargetLabel.Text = Mega.GetText("lani_target", p.Name) or ("Target: " .. p.Name)
+                    if States.Misc.Lani.Target == p then
+                        States.Misc.Lani.Target = nil
+                        LaniTargetLabel.Text = Mega.GetText("lani_target", "None") or "Target: None"
+                    else
+                        States.Misc.Lani.Target = p
+                        LaniTargetLabel.Text = Mega.GetText("lani_target", p.Name) or ("Target: " .. p.Name)
+                    end
+                    RefreshLaniPlayers()
                 end)
             end
         end
