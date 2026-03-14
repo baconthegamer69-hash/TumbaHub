@@ -24,6 +24,8 @@ task.spawn(function()
     end)
 end)
 
+local vector = vector or {create = function(x, y, z) return Vector3.new(x, y, z) end}
+
 -- Cletus ESP Logic
 local cletusEspFolder = Services.CoreGui:FindFirstChild("CletusESP")
 if not cletusEspFolder then
@@ -149,7 +151,7 @@ local lastCletusRun = 0
 connections.AutoHarvestLoop = Services.RunService.Heartbeat:Connect(function()
     if not States.Cletus.Enabled or not States.Cletus.AutoHarvest then return end
     
-    if tick() - lastCletusRun < 0.2 then return end
+    if tick() - lastCletusRun < 0.5 then return end
     lastCletusRun = tick()
 
     local char = LocalPlayer.Character
@@ -164,7 +166,7 @@ connections.AutoHarvestLoop = Services.RunService.Heartbeat:Connect(function()
                 if dist <= States.Cletus.Range then
                     if CropHarvestRemote then
                         local blockPos = Vector3.new(math.round(crop.Position.X / 3), math.round(crop.Position.Y / 3), math.round(crop.Position.Z / 3))
-                        local args = {{ ["position"] = Vector3.new(blockPos.X, blockPos.Y, blockPos.Z) }}
+                        local args = {{ ["position"] = vector.create(blockPos.X, blockPos.Y, blockPos.Z) }}
                         task.spawn(function()
                             pcall(function() CropHarvestRemote:InvokeServer(unpack(args)) end)
                         end)
