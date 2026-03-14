@@ -135,10 +135,10 @@ local function InitializeNoelleUI()
     end)
 
     local SLIME_TYPES = {
-        { Name = "Heal Slime", Type = 0, Color = Color3.fromRGB(50, 255, 100) },
-        { Name = "Void Slime", Type = 1, Color = Color3.fromRGB(150, 50, 255) },
-        { Name = "Sticky Slime", Type = 2, Color = Color3.fromRGB(255, 150, 50) },
-        { Name = "Frosty Slime", Type = 3, Color = Color3.fromRGB(50, 200, 255) },
+        { Name = "Heal Slime", Type = 0, Color = Color3.fromRGB(50, 255, 100), Icon = "rbxassetid://15295059428" },
+        { Name = "Void Slime", Type = 1, Color = Color3.fromRGB(150, 50, 255), Icon = "rbxassetid://15295057154" },
+        { Name = "Sticky Slime", Type = 2, Color = Color3.fromRGB(255, 150, 50), Icon = "rbxassetid://15295064061" },
+        { Name = "Frosty Slime", Type = 3, Color = Color3.fromRGB(50, 200, 255), Icon = "rbxassetid://15295050177" },
     }
 
     local function OpenPlayerManager(slimeData)
@@ -159,6 +159,15 @@ local function InitializeNoelleUI()
         btn.TextSize = 15
         btn.Parent = SlimeSelectContainer
         Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
+        
+        if slime.Icon then
+            local iconImg = Instance.new("ImageLabel")
+            iconImg.Size = UDim2.new(0, 30, 0, 30)
+            iconImg.Position = UDim2.new(0, 10, 0.5, -15)
+            iconImg.BackgroundTransparency = 1
+            iconImg.Image = slime.Icon
+            iconImg.Parent = btn
+        end
         
         btn.MouseButton1Click:Connect(function()
             OpenPlayerManager(slime)
