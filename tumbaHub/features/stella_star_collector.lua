@@ -14,7 +14,9 @@ local LocalPlayer = Services.Players.LocalPlayer
 local States = Mega.States
 
 if States.StarCollector == nil then
-    States.StarCollector = { Enabled = false, Range = 60, ESP = false }
+    States.StarCollector = { Enabled = false, Range = 60, ESP = false, AutoCollect = false }
+elseif States.StarCollector.AutoCollect == nil then
+    States.StarCollector.AutoCollect = false
 end
 
 if not Mega.Objects.StarConnections then Mega.Objects.StarConnections = {} end
@@ -109,7 +111,7 @@ end
 -- Auto Collect Loop
 local lastStarCheck = 0
 connections.AutoCollectLoop = Services.RunService.Heartbeat:Connect(function()
-    if not States.StarCollector.Enabled then return end
+    if not States.StarCollector.Enabled or not States.StarCollector.AutoCollect then return end
     if not CollectStarRemote then return end
     
     if tick() - lastStarCheck < 0.1 then return end
