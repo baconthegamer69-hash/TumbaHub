@@ -130,6 +130,8 @@ ActionLayout.Padding = UDim.new(0, 5)
 local currentTarget = nil
 local selectedSlimesForAction = {}
 
+local RefreshSlimesForTarget -- Forward declaration
+
 local function CreateActionButton(text, color, callback)
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(0.23, 0, 1, 0)
@@ -146,37 +148,113 @@ end
 
 CreateActionButton(Mega.GetText("noelle_give") or "GIVE", Color3.fromRGB(0, 180, 100), function()
     if not currentTarget or not RequestMoveSlime then return end
+    local count = 0
     for slimeId, _ in pairs(selectedSlimesForAction) do
+        count = count + 1
         local args = {{ slimeId = slimeId, targetPlayerUserId = currentTarget.UserId }}
         task.spawn(function() pcall(function() RequestMoveSlime:InvokeServer(unpack(args)) end) end)
     end
+    if Mega.ShowNotification then Mega.ShowNotification(string.format("Gave %d slimes", count), 2) end
+    RefreshSlimesForTarget()
 end)
 
 CreateActionButton(Mega.GetText("noelle_bind") or "BIND", Color3.fromRGB(100, 100, 255), function()
     if not currentTarget then return end
+    local count = 0
     for slimeId, _ in pairs(selectedSlimesForAction) do
         States.Noelle.Binds[slimeId] = currentTarget.UserId
+        count = count + 1
     end
+    if Mega.ShowNotification then Mega.ShowNotification(string.format("Bound %d slimes", count), 2) end
+    RefreshSlimesForTarget()
 end)
 
 CreateActionButton(Mega.GetText("noelle_unbind") or "UNBIND", Color3.fromRGB(255, 100, 100), function()
+    local count = 0
     for slimeId, _ in pairs(selectedSlimesForAction) do
         if States.Noelle.Binds[slimeId] then
             States.Noelle.Binds[slimeId] = nil
+            count = count + 1
         end
     end
+    if Mega.ShowNotification then Mega.ShowNotification(string.format("Unbound %d slimes", count), 2) end
+    RefreshSlimesForTarget()
 end)
 
 CreateActionButton(Mega.GetText("noelle_remove") or "TAKE BACK", Color3.fromRGB(200, 60, 60), function()
     if not RequestMoveSlime then return end
+    local count = 0
     for slimeId, _ in pairs(selectedSlimesForAction) do
+        count = count + 1
         local args = {{ slimeId = slimeId, targetPlayerUserId = LocalPlayer.UserId }}
         task.spawn(function() pcall(function() RequestMoveSlime:InvokeServer(unpack(args)) end) end)
     end
+    if Mega.ShowNotification then Mega.ShowNotification(string.format("Took back %d slimes", count), 2) end
+    RefreshSlimesForTarget()
 end)
 
-local function RefreshSlimesForTarget()
-    -- Логика обновления слаймов, аналогично tumbaHub.lua
+RefreshSlimesForTarget = function()
+    for _, v in pairs(SlimeScroll:GetChildren()) do if v:IsA("TextButton") then v:Destroy() end end
+    selectedSlimesForAction = {}
+    
+    if not SlimeDataFolder then return end
+    local myName = LocalPlayer.Name
+    
+    for _, child in ipairs(SlimeDataFolder:GetChildren()) do
+        if string.sub(child.Name, 1, #myName) == myName then
+            local slimeId = child:GetAttribute("Id")
+            if not slimeId and child:FindFirstChild("Id") then slimeId = child.Id.Value end
+            
+            if slimeId then
+                local btn = Instance.new("TextButton")
+                btn.Size = UDim2.new(0.95, 0, 0, 35)
+                btn.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
+                btn.Parent = SlimeScroll
+                
+                local dName = string.sub(child.Name, #myName + 2)
+                if dName == "Slime_0" then dName = "Heal"
+                elseif dName == "Slime_1" then dName = "Damage"
+                elseif dName == "Slime_2" then dName = "Collect"
+                elseif dName == "Slime_3" then dName = "Frosty"
+                end
+                
+                local isBoundToCurrent = (States.Noelle.Binds[slimeId] == currentTarget.UserId)
+                local isBoundToOther = (States.Noelle.Binds[slimeId] and States.Noelle.Binds[slimeId] ~= currentTarget.UserId)
+                
+                local statusText = ""
+                if isBoundToCurrent then 
+                    statusText = " [BOUND]" 
+                    btn.BackgroundColor3 = Color3.fromRGB(0, 100, 200)
+                elseif isBoundToOther then
+                    statusText = " " .. (Mega.GetText("noelle_bound_other") or "(Bound)")
+                    btn.BackgroundColor3 = Color3.fromRGB(100, 50, 50)
+                end
+                
+                btn.Text = dName .. statusText
+                btn.TextColor3 = Color3.new(1,1,1)
+                btn.Font = Enum.Font.Gotham
+                btn.TextSize = 14
+                Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
+                
+                btn.MouseButton1Click:Connect(function()
+                    if selectedSlimesForAction[slimeId] then
+                        selectedSlimesForAction[slimeId] = nil
+                        if States.Noelle.Binds[slimeId] == currentTarget.UserId then
+                            btn.BackgroundColor3 = Color3.fromRGB(0, 100, 200)
+                        elseif States.Noelle.Binds[slimeId] then
+                            btn.BackgroundColor3 = Color3.fromRGB(100, 50, 50)
+                        else
+                            btn.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
+                        end
+                    else
+                        selectedSlimesForAction[slimeId] = true
+                        btn.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
+                    end
+                end)
+            end
+        end
+    end
+    SlimeScroll.CanvasSize = UDim2.new(0, 0, 0, SLayout.AbsoluteContentSize.Y)
 end
 
 local function OpenSlimeManager(player)
@@ -213,6 +291,14 @@ local function RefreshPlayerList()
     end
     PlayerSelectContainer.CanvasSize = UDim2.new(0, 0, 0, PLayout.AbsoluteContentSize.Y)
 end
+
+connections.NoellePlayerRefresh = Services.Players.PlayerAdded:Connect(function()
+    if States.Noelle.Enabled and PlayerSelectContainer.Visible then RefreshPlayerList() end
+end)
+
+connections.NoellePlayerRefresh2 = Services.Players.PlayerRemoving:Connect(function()
+    if States.Noelle.Enabled and PlayerSelectContainer.Visible then RefreshPlayerList() end
+end)
 
 function Mega.Features.Noelle.SetEnabled(state)
     States.Noelle.Enabled = state
