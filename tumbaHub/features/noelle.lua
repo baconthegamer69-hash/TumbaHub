@@ -34,23 +34,23 @@ task.spawn(function()
     end)
 end)
 
+local lastBindTick = 0
 connections.NoelleBindLoop = Services.RunService.Heartbeat:Connect(function()
     if not States.Noelle.Enabled then return end
     if not RequestMoveSlime then return end
-    if tick() % 1 > 0.1 then return end -- Каждую ~1 секунду
+    if tick() - lastBindTick < 1 then return end
+    lastBindTick = tick()
     for slimeId, targetId in pairs(States.Noelle.Binds) do
         local args = {{ slimeId = slimeId, targetPlayerUserId = targetId }}
         task.spawn(function() pcall(function() RequestMoveSlime:InvokeServer(unpack(args)) end) end)
     end
 end)
 
-local NoelleContainer = Mega.Objects.NoelleContainer
-if not NoelleContainer then
-    warn("NoelleContainer not found!")
-    return
-end
+local RefreshPlayerList = function() end
 
-NoelleContainer:ClearAllChildren()
+local function InitializeNoelleUI()
+    local NoelleContainer = Mega.Objects.NoelleContainer
+    NoelleContainer:ClearAllChildren()
 
 local PlayerSelectContainer = Instance.new("ScrollingFrame")
 PlayerSelectContainer.Name = "PlayerSelect"
@@ -271,7 +271,7 @@ BackBtn.MouseButton1Click:Connect(function()
     currentTarget = nil
 end)
 
-local function RefreshPlayerList()
+RefreshPlayerList = function()
     for _, v in pairs(PlayerSelectContainer:GetChildren()) do if v:IsA("TextButton") then v:Destroy() end end
     
     for _, p in ipairs(Services.Players:GetPlayers()) do
@@ -298,6 +298,14 @@ end)
 
 connections.NoellePlayerRefresh2 = Services.Players.PlayerRemoving:Connect(function()
     if States.Noelle.Enabled and PlayerSelectContainer.Visible then RefreshPlayerList() end
+end)
+
+    if States.Noelle.Enabled then RefreshPlayerList() end
+end
+
+task.spawn(function()
+    while not Mega.Objects.NoelleContainer do task.wait(0.1) end
+    InitializeNoelleUI()
 end)
 
 function Mega.Features.Noelle.SetEnabled(state)
