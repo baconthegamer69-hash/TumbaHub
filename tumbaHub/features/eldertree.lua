@@ -1,152 +1,117 @@
--- features/eldertree.lua
--- Logic for Eldertree (Tree Orbs collection and ESP)
+-- gui/tabs/farm.lua
+-- Content for the "KIT" (Farm) tab
 
-task.wait(2) -- Даем время на инициализацию, чтобы избежать ошибок
+local tabKey = "tab_farm"
+local UI = Mega.UI
 
-if not Mega.Features then Mega.Features = {} end
-Mega.Features.Eldertree = {}
+-- Ensure states exist to prevent errors (Fallback defaults)
+if not Mega.States.Beekeeper then Mega.States.Beekeeper = { Enabled = false, ShowIcons = true, ShowHighlight = true, ShowHiveLevels = false, AutoCatch = false } end
+if not Mega.States.Cletus then Mega.States.Cletus = { Enabled = false, Range = 20, AutoHarvest = false, ESP = false, ESPTransparency = 0.75 } end
+if not Mega.States.Eldertree then Mega.States.Eldertree = { Enabled = false, Range = 30, ESP = false, AutoCollect = false } end
+if not Mega.States.StarCollector then Mega.States.StarCollector = { Enabled = false, Range = 60, ESP = false } end
+if not Mega.States.Metal then Mega.States.Metal = { Enabled = false, ESP = true, AutoCollect = false, Range = 25 } end
+if not Mega.States.Taliah then Mega.States.Taliah = { Enabled = false, ESP = false, ESPTransparency = 0.2, AutoCollect = false, CollectRadius = 5 } end
+if not Mega.States.Fisherman then Mega.States.Fisherman = { Enabled = false } end
+if not Mega.States.Noelle then Mega.States.Noelle = { Enabled = false, SaveBinds = false, Binds = {} } end
 
-local Services = {
-    ReplicatedStorage = game:GetService("ReplicatedStorage"),
-    CollectionService = game:GetService("CollectionService"),
-    RunService = game:GetService("RunService"),
-    Players = game:GetService("Players"),
-    CoreGui = game:GetService("CoreGui")
-}
-local LocalPlayer = Services.Players.LocalPlayer
-local States = Mega.States
+-- Load feature modules for this tab
+Mega.LoadModule("features/beekeeper.lua")
+Mega.LoadModule("features/farmer_cletus.lua")
+Mega.LoadModule("features/eldertree.lua")
 
--- Убедимся, что новая настройка существует, и установим значение по умолчанию
-if States.Eldertree.AutoCollect == nil then
-    States.Eldertree.AutoCollect = false
-end
+-- Create the container frame for this tab
+local TabFrame = Instance.new("ScrollingFrame")
+TabFrame.Name = tabKey
+TabFrame.Size = UDim2.new(1, 0, 1, 0)
+TabFrame.BackgroundTransparency = 1
+TabFrame.BorderSizePixel = 0
+TabFrame.ScrollBarThickness = 4
+TabFrame.ScrollBarImageColor3 = Mega.Settings.Menu.AccentColor
+TabFrame.Visible = false
+TabFrame.Parent = Mega.Objects.ContentContainer
 
--- Ensure connection container exists
-if not Mega.Objects.EldertreeConnections then Mega.Objects.EldertreeConnections = {} end
-local connections = Mega.Objects.EldertreeConnections
+local ContentLayout = Instance.new("UIListLayout", TabFrame)
+ContentLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+ContentLayout.SortOrder = Enum.SortOrder.LayoutOrder
+ContentLayout.Padding = UDim.new(0, 0)
 
--- Очищаем старые коннекты, если скрипт перезапускается
-if connections.ESPLoop then connections.ESPLoop:Disconnect() end
-if connections.AutoCollectLoop then connections.AutoCollectLoop:Disconnect() end
-if connections.ESPAdded then connections.ESPAdded:Disconnect() end
-connections.ESPLoop = nil
-connections.AutoCollectLoop = nil
-connections.ESPAdded = nil
+Mega.Objects.TabFrames[tabKey] = TabFrame
 
--- Remote
-local ConsumeTreeOrbRemote
-task.spawn(function()
-    pcall(function()
-        ConsumeTreeOrbRemote = Services.ReplicatedStorage:WaitForChild("rbxts_include", 10):WaitForChild("node_modules"):WaitForChild("@rbxts"):WaitForChild("net"):WaitForChild("out"):WaitForChild("_NetManaged"):WaitForChild("ConsumeTreeOrb")
-    end)
-end)
-
--- ESP Setup
-local espFolder = Instance.new("Folder")
-espFolder.Name = "EldertreeESP"
-if Mega.Objects.GUI then
-    espFolder.Parent = Mega.Objects.GUI
-else
-    espFolder.Parent = Services.CoreGui
-end
-
-local ORB_ICON = "rbxassetid://11003449842"
-
-local espCache = {}
-local function ClearESP()
-    if connections.ESPAdded then connections.ESPAdded:Disconnect() end
-    connections.ESPAdded = nil
-    espFolder:ClearAllChildren()
-    table.clear(espCache)
-end
-
-local function CreateOrbESP(orb)
-    if not orb or not orb.PrimaryPart then return end
-    if espCache[orb] then return end
-    
-    local billboard = Instance.new("BillboardGui")
-    billboard.Adornee = orb.PrimaryPart
-    billboard.Size = UDim2.fromOffset(32, 32)
-    billboard.StudsOffsetWorldSpace = Vector3.new(0, 3, 1.5)
-    billboard.AlwaysOnTop = true
-    billboard.Parent = espFolder
-    
-    local img = Instance.new("ImageLabel")
-    img.Size = UDim2.fromScale(1, 1)
-    img.BackgroundTransparency = 0.5
-    img.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-    img.Image = ORB_ICON
-    img.Parent = billboard
-    Instance.new("UICorner", img).CornerRadius = UDim.new(0, 4)
-    
-    local conn = orb.AncestryChanged:Connect(function(_, parent)
-        if not parent then billboard:Destroy() end
-    end)
-    
-    espCache[orb] = billboard
-    billboard.Destroying:Connect(function() 
-        conn:Disconnect() 
-        espCache[orb] = nil
-    end)
-end
-
-local lastEspState = false
-
--- 1. Отдельный цикл для контроля ESP
-connections.ESPLoop = Services.RunService.Heartbeat:Connect(function()
-    local currentEspState = States.Eldertree.Enabled and States.Eldertree.ESP
-    if currentEspState ~= lastEspState then
-        lastEspState = currentEspState
-        ClearESP()
-        if currentEspState then
-            connections.ESPAdded = Services.CollectionService:GetInstanceAddedSignal("treeOrb"):Connect(function(orb)
-                if States.Eldertree.Enabled and States.Eldertree.ESP then CreateOrbESP(orb) end
-            end)
-            for _, orb in ipairs(Services.CollectionService:GetTagged("treeOrb")) do
-                CreateOrbESP(orb)
-            end
-        end
+--#region -- Beekeeper
+UI.CreateToggleWithSettings(TabFrame, "toggle_beekeeper", "Beekeeper.Enabled", function(state)
+    if Mega.Features.Beekeeper then
+        Mega.Features.Beekeeper.SetEnabled(state)
     end
-end)
+end, {
+    UI.CreateToggle(nil, "toggle_bee_icons", "Beekeeper.ShowIcons", function() if Mega.Features.Beekeeper then Mega.Features.Beekeeper.UpdateVisuals() end end),
+    UI.CreateToggle(nil, "toggle_bee_highlight", "Beekeeper.ShowHighlight", function() if Mega.Features.Beekeeper then Mega.Features.Beekeeper.UpdateVisuals() end end),
+    UI.CreateToggle(nil, "toggle_hive_levels", "Beekeeper.ShowHiveLevels", function() if Mega.Features.Beekeeper then Mega.Features.Beekeeper.UpdateVisuals() end end),
+    UI.CreateToggle(nil, "toggle_auto_catch", "Beekeeper.AutoCatch")
+})
+--#endregion
 
--- 2. Отдельная логика вкл/выкл Авто-сбора
-local lastCheck = 0
-connections.AutoCollectLoop = Services.RunService.Heartbeat:Connect(function()
-    if not States.Eldertree.Enabled or not States.Eldertree.AutoCollect or not ConsumeTreeOrbRemote then return end
-    
-    if tick() - lastCheck < 0.1 then return end
-    lastCheck = tick()
-    
-    local char = LocalPlayer.Character
-    local root = char and char:FindFirstChild("HumanoidRootPart")
-    if not root then return end
-    
-    for _, orb in ipairs(Services.CollectionService:GetTagged("treeOrb")) do
-        if orb:IsA("Model") and orb.PrimaryPart then
-            local dist = (root.Position - orb.PrimaryPart.Position).Magnitude
-            if dist <= States.Eldertree.Range then
-                local secret = orb:GetAttribute("TreeOrbSecret")
-                if secret then
-                    local args = { { treeOrbSecret = secret } }
-                    task.spawn(function()
-                        pcall(function() ConsumeTreeOrbRemote:InvokeServer(unpack(args)) end)
-                    end)
-                end
-            end
-        end
+--#region -- Cletus
+UI.CreateToggleWithSettings(TabFrame, "toggle_cletus", "Cletus.Enabled", function(state)
+    if Mega.Features.Cletus then
+        Mega.Features.Cletus.SetEnabled(state)
     end
+end, {
+    UI.CreateToggle(nil, "toggle_cletus_harvest", "Cletus.AutoHarvest"),
+    UI.CreateToggle(nil, "toggle_cletus_esp", "Cletus.ESP", function() if Mega.Features.Cletus then Mega.Features.Cletus.RecreateESP() end end),
+    UI.CreateSlider(nil, "slider_cletus_range", "Cletus.Range", 5, 100),
+    UI.CreateSlider(nil, "slider_cletus_esp_transparency", "Cletus.ESPTransparency", 0, 100, function(v) Mega.States.Cletus.ESPTransparency = v/100; if Mega.Features.Cletus then Mega.Features.Cletus.UpdateVisuals() end end)
+})
+--#endregion
+
+--#region -- Eldertree
+UI.CreateToggleWithSettings(TabFrame, "toggle_eldertree", "Eldertree.Enabled", function(state)
+    if Mega.Features.Eldertree then
+        Mega.Features.Eldertree.SetEnabled(state)
+    end
+end, {
+    UI.CreateToggle(nil, "toggle_eldertree_autocollect", "Eldertree.AutoCollect", function(state)
+        if Mega.Features.Eldertree and Mega.Features.Eldertree.SetAutoCollect then Mega.Features.Eldertree.SetAutoCollect(state) end
+    end),
+    UI.CreateToggle(nil, "toggle_eldertree_esp", "Eldertree.ESP", function()
+        if Mega.Features.Eldertree then Mega.Features.Eldertree.UpdateESP() end
+    end),
+    UI.CreateSlider(nil, "slider_eldertree_range", "Eldertree.Range", 5, 100)
+})
+--#endregion
+
+--#region -- Star Collector
+UI.CreateToggleWithSettings(TabFrame, "toggle_star_collector", "StarCollector.Enabled", nil, {
+    UI.CreateToggle(nil, "toggle_star_collector_esp", "StarCollector.ESP"),
+    UI.CreateSlider(nil, "slider_star_collector_range", "StarCollector.Range", 5, 100)
+})
+--#endregion
+
+--#region -- Metal Detector
+UI.CreateToggleWithSettings(TabFrame, "toggle_metal", "Metal.Enabled", nil, {
+    UI.CreateToggle(nil, "toggle_metal_esp", "Metal.ESP"),
+    UI.CreateToggle(nil, "toggle_metal_collect", "Metal.AutoCollect"),
+    UI.CreateSlider(nil, "slider_metal_range", "Metal.Range", 5, 100)
+})
+--#endregion
+
+--#region -- Taliah
+UI.CreateToggleWithSettings(TabFrame, "toggle_taliah", "Taliah.Enabled", nil, {
+    UI.CreateToggle(nil, "toggle_taliah_esp", "Taliah.ESP"),
+    UI.CreateToggle(nil, "toggle_taliah_collect", "Taliah.AutoCollect"),
+    UI.CreateSlider(nil, "slider_taliah_radius", "Taliah.CollectRadius", 5, 50),
+    UI.CreateSlider(nil, "slider_taliah_esp_transparency", "Taliah.ESPTransparency", 0, 100, function(v) Mega.States.Taliah.ESPTransparency = v/100 end)
+})
+--#endregion
+
+--#region -- Fisherman
+UI.CreateSection(TabFrame, "toggle_fisherman")
+UI.CreateToggle(TabFrame, "toggle_autofish", "Fisherman.Enabled")
+--#endregion
+
+--#region -- Noelle
+UI.CreateSection(TabFrame, "noelle_title")
+UI.CreateToggle(TabFrame, "toggle_noelle_save_binds", "Noelle.SaveBinds")
+UI.CreateButton(TabFrame, "button_noelle_manager", function()
+    Mega.ShowNotification("Noelle Manager is not implemented yet.", 3)
 end)
-
--- Оставляем эти функции для обратной совместимости, чтобы ничего не сломалось
--- если другие скрипты попытаются их вызвать, но логика уже обрабатывается автономно
-function Mega.Features.Eldertree.SetEnabled(state)
-    States.Eldertree.Enabled = state
-end
-
-function Mega.Features.Eldertree.UpdateESP()
-    -- Пусто, так как ESPLoop автоматически обнаружит изменение States.Eldertree.ESP
-end
-
-function Mega.Features.Eldertree.SetAutoCollect(state)
-    States.Eldertree.AutoCollect = state
-end
+--#endregion
