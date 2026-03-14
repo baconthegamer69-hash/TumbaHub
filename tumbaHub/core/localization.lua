@@ -56,6 +56,7 @@ Mega.Localization = {
         ["toggle_metal"] = { ru = "Металлоискатель (Metal)", en = "Metal Detector", es = "Detector de Metales", pt = "Detector de Metais", ko = "금속 탐지기", ja = "金属探知機", uk = "Металошукач" },
         ["toggle_metal_esp"] = { ru = "Подсветка металла", en = "Metal ESP", es = "ESP de Metal", pt = "ESP de Metal", ko = "금속 ESP", ja = "金属ESP", uk = "Підсвічування металу" },
         ["toggle_metal_collect"] = { ru = "Авто-сбор металла", en = "Auto Collect Metal", es = "Recolección Auto", pt = "Coleta Auto", ko = "자동 금속 수집", ja = "自動金属収集", uk = "Авто-збір металу" },
+        ["toggle_metal_collect_legit"] = { ru = "Авто-сбор металла (Legit)", en = "Auto Collect Metal (Legit)", es = "Recolección Auto (Legit)", pt = "Coleta Auto (Legit)", ko = "자동 금속 수집 (Legit)", ja = "自動金属収集 (Legit)", uk = "Авто-збір металу (Legit)" },
         ["slider_metal_range"] = { ru = "Дистанция сбора", en = "Collect Range", es = "Rango de Recolección", pt = "Alcance de Coleta", ko = "수집 범위", ja = "収集範囲", uk = "Дистанція збору" },
         ["toggle_taliah"] = { ru = "Талия (Taliah)", en = "Taliah", es = "Taliah", pt = "Taliah", ko = "탈리아", ja = "タリア", uk = "Талія" },
         ["toggle_taliah_esp"] = { ru = "Подсветка куриц", en = "Chicken ESP", es = "ESP de Pollos", pt = "ESP de Galinhas", ko = "닭 ESP", ja = "鶏ESP", uk = "Підсвічування курей" },
