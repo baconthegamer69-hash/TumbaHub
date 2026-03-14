@@ -27,10 +27,12 @@ end)
 local vector = vector or {create = function(x, y, z) return Vector3.new(x, y, z) end}
 
 -- Cletus ESP Logic
-local cletusEspFolder = Services.CoreGui:FindFirstChild("CletusESP")
-if not cletusEspFolder then
-    cletusEspFolder = Instance.new("Folder")
-    cletusEspFolder.Name = "CletusESP"
+local cletusEspFolder = Instance.new("Folder")
+cletusEspFolder.Name = "CletusESP"
+
+if Mega.Objects.GUI then
+    cletusEspFolder.Parent = Mega.Objects.GUI
+else
     cletusEspFolder.Parent = Services.CoreGui
 end
 
