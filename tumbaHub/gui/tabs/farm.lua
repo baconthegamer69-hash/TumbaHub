@@ -69,6 +69,9 @@ UI.CreateToggleWithSettings(TabFrame, "toggle_eldertree", "Eldertree.Enabled", f
         Mega.Features.Eldertree.SetEnabled(state)
     end
 end, {
+    UI.CreateToggle(nil, "toggle_eldertree_autocollect", "Eldertree.AutoCollect", function(state)
+        if Mega.Features.Eldertree and Mega.Features.Eldertree.SetAutoCollect then Mega.Features.Eldertree.SetAutoCollect(state) end
+    end),
     UI.CreateToggle(nil, "toggle_eldertree_esp", "Eldertree.ESP", function()
         if Mega.Features.Eldertree then Mega.Features.Eldertree.UpdateESP() end
     end),
