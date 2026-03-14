@@ -10,7 +10,7 @@ if not Mega.States.Cletus then Mega.States.Cletus = { Enabled = false, Range = 2
 if not Mega.States.Eldertree then Mega.States.Eldertree = { Enabled = false, Range = 30, ESP = false, AutoCollect = false } end
 if not Mega.States.StarCollector then Mega.States.StarCollector = { Enabled = false, Range = 60, ESP = false } end
 if not Mega.States.Metal then Mega.States.Metal = { Enabled = false, ESP = true, AutoCollect = false, Range = 25 } end
-if not Mega.States.Taliah then Mega.States.Taliah = { Enabled = false, ESP = false, ESPTransparency = 0.2, AutoCollect = false, CollectRadius = 5 } end
+if not Mega.States.Taliah then Mega.States.Taliah = { Enabled = false, ESP = false, ESPTransparency = 0.2, AutoCollect = false, AutoCollectLegit = false, CollectRadius = 5 } end
 if not Mega.States.Fisherman then Mega.States.Fisherman = { Enabled = false } end
 if not Mega.States.Noelle then Mega.States.Noelle = { Enabled = false, SaveBinds = false, Binds = {} } end
 
@@ -108,6 +108,7 @@ UI.CreateToggleWithSettings(TabFrame, "toggle_metal", "Metal.Enabled", nil, {
 UI.CreateToggleWithSettings(TabFrame, "toggle_taliah", "Taliah.Enabled", nil, {
     UI.CreateToggle(nil, "toggle_taliah_esp", "Taliah.ESP"),
     UI.CreateToggle(nil, "toggle_taliah_collect", "Taliah.AutoCollect"),
+    UI.CreateToggle(nil, "toggle_taliah_collect_legit", "Taliah.AutoCollectLegit"),
     UI.CreateSlider(nil, "slider_taliah_radius", "Taliah.CollectRadius", 5, 50),
     UI.CreateSlider(nil, "slider_taliah_esp_transparency", "Taliah.ESPTransparency", 0, 100, function(v) Mega.States.Taliah.ESPTransparency = v/100 end)
 })
