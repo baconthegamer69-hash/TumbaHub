@@ -1,114 +1,223 @@
--- gui/tabs/settings.lua
--- Content for the "SETTINGS" tab
+-- core/settings.lua
+-- Contains all default settings, states, and database structures.
 
-local tabKey = "tab_settings"
-local UI = Mega.UI
+Mega.VERSION = "5.0.1" -- Refactored version
+Mega.BUILD_DATE = "2024.03.02"
+Mega.DEVELOPER = "I.S.-1"
+Mega.SPECIAL_THANKS = "N.User-1"
 
--- Create the container frame for this tab
-local TabFrame = Instance.new("ScrollingFrame")
-TabFrame.Name = tabKey
-TabFrame.Size = UDim2.new(1, 0, 1, 0)
-TabFrame.BackgroundTransparency = 1
-TabFrame.BorderSizePixel = 0
-TabFrame.ScrollBarThickness = 4
-TabFrame.ScrollBarImageColor3 = Mega.Settings.Menu.AccentColor
-TabFrame.Visible = false
-TabFrame.Parent = Mega.Objects.ContentContainer
-
-local ContentLayout = Instance.new("UIListLayout", TabFrame)
-ContentLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-ContentLayout.SortOrder = Enum.SortOrder.LayoutOrder
-ContentLayout.Padding = UDim.new(0, 8)
-
-Mega.Objects.TabFrames[tabKey] = TabFrame
-
---#region -- Appearance
-UI.CreateSection(TabFrame, "section_settings_appearance")
-
-UI.CreateDropdown(TabFrame, "dropdown_language", "Localization.CurrentLanguage", {
-    "language_english", "language_russian", "language_spanish", "language_portuguese", "language_korean", "language_japanese", "language_ukrainian"
-}, function(val)
-    local langMap = {
-        language_english = "en", language_russian = "ru", language_spanish = "es",
-        language_portuguese = "pt", language_korean = "ko", language_japanese = "ja",
-        language_ukrainian = "uk"
+Mega.Settings = {
+    Menu = {
+        Width = 950,
+        Height = 550,
+        BackgroundColor = Color3.fromRGB(20, 20, 30),      -- Dark Purple/Blue
+        TitleBarColor = Color3.fromRGB(30, 30, 45),        -- Darker Purple
+        AccentColor = Color3.fromRGB(200, 70, 255),       -- Vibrant Magenta
+        SecondaryColor = Color3.fromRGB(0, 255, 255),     -- Bright Cyan
+        TextColor = Color3.fromRGB(255, 255, 255),
+        Transparency = 0.1,
+        CornerRadius = 12,
+        AnimationSpeed = 0.25
+    },
+    System = {
+        AntiAFK = true,
+        AutoSave = true,
+        PerformanceMode = false,
+        DebugMode = false,
+        Logging = true,
+        ShowStatusIndicator = true
+    },
+    StatusIndicator = {
+        RainbowMode = true,
+        Scale = 14
     }
-    local lang = langMap[val] or "en"
-    Mega.Localization.CurrentLanguage = lang
-    Mega.SaveLanguage(lang)
-    Mega.ShowNotification(Mega.GetText("notify_language_changed", Mega.GetText(val)), 3)
-    -- Here you would ideally reload the entire GUI to apply language changes
-end, true)
+}
 
-UI.CreateSlider(TabFrame, "slider_menu_transparency", "Settings.Menu.Transparency", 0, 100, function(v) 
-    local trans = v / 100
-    Mega.Settings.Menu.Transparency = trans
-    if Mega.Objects.GUI then
-        Mega.Objects.GUI.MainFrame.BackgroundTransparency = trans
-    end
-end)
+Mega.States = {
+    ESP = {
+        Enabled = false,
+        Boxes = true,
+        Names = true,
+        Distance = true,
+        Health = true,
+        Tracers = true,
+        ShowTeam = false,
+        MaxDistance = 1000,
+        TeamColor = Color3.fromRGB(0, 255, 0),
+        EnemyColor = Color3.fromRGB(255, 0, 0),
+        NeutralColor = Color3.fromRGB(255, 255, 0)
+    },
+    KitESP = {
+        Enabled = false,
+        BoxColor = Color3.fromRGB(255, 165, 0),
+        TextColor = Color3.fromRGB(255, 255, 255),
+        MaxDistance = 500,
+        Filters = {
+            Iron = true,
+            Bee = true,
+            Thorns = true,
+            Mushrooms = true,
+            Sorcerer = true
+        }
+    },
+    AimAssist = {
+        Enabled = false,
+        Active = false,
+        Key = "R",
+        FOV = 120,
+        Smoothness = 0.4,
+        Range = 100,
+        Prediction = true,
+        SilentAim = false,
+        TargetPart = "Head",
+        ShowFOV = true,
+        FOVColor = Color3.fromRGB(0, 180, 255)
+    },
+    Visuals = {
+        NoFog = false,
+        FullBright = false,
+        Chams = false,
+        NightMode = false,
+        RemoveShadows = false
+    },
+    Player = {
+        Fly = false,
+        FlyMode = "Velocity",
+        FlySpeed = 24,
+        Speed = false,
+        SpeedValue = 100,
+        GodMode = false,
+        InfiniteJump = false,
+        NoClip = false,
+        AntiKnockback = false,
+        KnockbackStrength = 50,
+        FastBreak = false,
+        BreakSpeed = 3,
+        LongJump = false,
+        LongJumpPower = 50,
+        HighJump = false,
+        HighJumpPower = 50,
+        Sprint = false,
+        NoFall = false,
+        FollowTarget = nil,
+        SpinBot = false,
+        SpinSpeed = 10,
+        Spider = false,
+        SpiderSpeed = 30,
+        SpiderMode = "Velocity",
+        Scaffold = {
+            Enabled = false,
+            GridSize = 3,
+            Delay = 0.05,
+            YOffset = -3.5,
+            Predict = 0.15
+        }
+    },
+    Combat = {
+        TriggerBot = false,
+        AutoShoot = false,
+        RapidFire = false,
+        NoRecoil = false,
+        NoSpread = false,
+        Killaura = {
+            Enabled = false,
+            Range = 25,
+            Delay = 0
+        }
+    },
+    Misc = {
+        FameSpam = false,
+        AutoFarm = false,
+        CollectItems = false,
+        FamesMom = false,
+        AntiStun = false,
+        AutoKit = {
+            Enabled = false,
+            KitName = "yuzi",
+            Cooldown = 2,
+        },
+        ChestSteal = {
+            Enabled = false,
+            Range = 25
+        },
+        AutoDeposit = {
+            Enabled = false,
+            Range = 25,
+            Resources = {
+                ["iron"] = true,
+                ["diamond"] = true,
+                ["emerald"] = true,
+                ["gold"] = true,
+                ["void_crystal"] = true,
+                ["wood"] = false,
+                ["stone"] = false
+            }
+        },
+        Lani = {
+            Enabled = false,
+            Keybind = "X",
+            Target = nil
+        }
+    },
+    Beekeeper = {
+        Enabled = false,
+        ShowIcons = true,
+        ShowHighlight = true,
+        ShowHiveLevels = false,
+        AutoCatch = false
+    },
+    Fisherman = {
+        Enabled = false
+    },
+    Noelle = {
+        Enabled = false,
+        SaveBinds = false,
+        Binds = {}
+    },
+    Cletus = {
+        Enabled = false,
+        Range = 20,
+        AutoHarvest = false,
+        ESP = false,
+        ESPTransparency = 0.75
+    },
+    Eldertree = {
+        Enabled = false,
+        Range = 30,
+        ESP = false,
+        AutoCollect = false
+    },
+    StarCollector = {
+        Enabled = false,
+        Range = 60,
+        ESP = false
+    },
+    Metal = {
+        Enabled = false,
+        ESP = true,
+        AutoCollect = false,
+        Range = 25
+    },
+    Taliah = {
+        Enabled = false,
+        ESP = false,
+        ESPTransparency = 0.2,
+        AutoCollect = false,
+        CollectRadius = 5
+    },
+    Keybinds = {
+        Menu = "RightShift",
+        AimAssist = "R",
+        Killaura = "None",
+        Scaffold = "None"
+    }
+}
 
-UI.CreateKeybindButton(TabFrame, "keybind_menu", "Keybinds.Menu")
-
-UI.CreateButton(TabFrame, "button_change_theme", function() Mega.ShowNotification("Theme changing is not implemented yet.", 3) end)
---#endregion
-
---#region -- Config Management
-UI.CreateSection(TabFrame, "section_settings_config")
-
-local _, configNameBox = UI.CreateTextBox(TabFrame, "textbox_config_name", Mega.GetText("textbox_config_name"))
-
-local configDropdown
-local function refreshConfigList()
-    local configs = Mega.ConfigSystem.GetList()
-    if configDropdown then configDropdown:Destroy() end
-    configDropdown = UI.CreateDropdown(TabFrame, "dropdown_config_list", "Temp.SelectedConfig", configs)
-end
-
-refreshConfigList() -- Initial population
-
-UI.CreateButton(TabFrame, "button_config_save", function()
-    local name = configNameBox.Text
-    if name and name ~= "" then
-        Mega.ConfigSystem.Save(name)
-        Mega.ShowNotification(Mega.GetText("notify_config_saved"), 2)
-        refreshConfigList()
-    else
-        Mega.ShowNotification(Mega.GetText("notify_enter_name"), 2)
-    end
-end)
-
-UI.CreateButton(TabFrame, "button_config_load", function()
-    local name = Mega.States.Temp and Mega.States.Temp.SelectedConfig
-    if name and name ~= "" then
-        Mega.ConfigSystem.Load(name)
-        Mega.ShowNotification(Mega.GetText("notify_config_loaded"), 2)
-        -- You would need a full GUI refresh function here
-    end
-end)
-
-UI.CreateButton(TabFrame, "button_config_delete", function()
-    local name = Mega.States.Temp and Mega.States.Temp.SelectedConfig
-    if name and name ~= "" and isfile and isfile("TumbaConfig_" .. name .. ".json") then
-        delfile("TumbaConfig_" .. name .. ".json")
-        Mega.ShowNotification(Mega.GetText("notify_config_deleted"), 2)
-        refreshConfigList()
-    end
-end)
-
-UI.CreateButton(TabFrame, "button_config_refresh", refreshConfigList)
---#endregion
-
---#region -- Script Cleanup
-UI.CreateSection(TabFrame, "button_cleanup")
-
-UI.CreateButton(TabFrame, "button_cleanup", function()
-    Mega.ShowNotification(Mega.GetText("notify_cleanup"), 2)
-    -- Disconnect all connections
-    for _, c in ipairs(Mega.Objects.Connections) do pcall(c.Disconnect, c) end
-    -- Destroy all GUI elements
-    if Mega.Objects.GUI then Mega.Objects.GUI:Destroy() end
-    -- You might need to restore more original settings here (e.g. from Visuals)
-end)
---#endregion
-
+Mega.Database = {
+    Stats = {
+        Kills = 0,
+        Deaths = 0,
+        Headshots = 0,
+        PlayTime = 0
+    }
+}
