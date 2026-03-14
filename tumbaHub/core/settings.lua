@@ -184,7 +184,8 @@ Mega.States = {
     Eldertree = {
         Enabled = false,
         Range = 30,
-        ESP = false
+        ESP = false,
+        AutoCollect = false
     },
     StarCollector = {
         Enabled = false,
@@ -202,6 +203,7 @@ Mega.States = {
         ESP = false,
         ESPTransparency = 0.2,
         AutoCollect = false,
+        AutoCollectLegit = false,
         CollectRadius = 5
     },
     Keybinds = {
@@ -220,4 +222,3 @@ Mega.Database = {
         PlayTime = 0
     }
 }
-
