@@ -153,28 +153,31 @@ local function InitializeNoelleUI()
         local btn = Instance.new("TextButton")
         btn.Size = UDim2.new(0.95, 0, 0, 40)
         btn.BackgroundColor3 = Color3.fromRGB(40, 45, 60)
-        btn.Text = slime.Name
-        btn.TextColor3 = slime.Color
-        btn.Font = Enum.Font.GothamBold
-        btn.TextSize = 15
+        btn.Text = ""
         btn.Parent = SlimeSelectContainer
         Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
+        
+        local textLabel = Instance.new("TextLabel")
+        textLabel.Size = UDim2.new(1, -55, 1, 0)
+        textLabel.Position = UDim2.new(0, 55, 0, 0)
+        textLabel.BackgroundTransparency = 1
+        textLabel.Text = slime.Name
+        textLabel.TextColor3 = slime.Color
+        textLabel.Font = Enum.Font.GothamBold
+        textLabel.TextSize = 15
+        textLabel.TextXAlignment = Enum.TextXAlignment.Left
+        textLabel.Parent = btn
         
         if slime.Icon then
             local iconImg = Instance.new("ImageLabel")
             iconImg.Name = "Icon"
-            iconImg.Size = UDim2.new(0, 26, 0, 26)
-            iconImg.Position = UDim2.new(0, -35, 0.5, -13)
+            iconImg.Size = UDim2.new(0, 30, 0, 30)
+            iconImg.Position = UDim2.new(0, 15, 0.5, -15)
             iconImg.BackgroundTransparency = 1
             iconImg.Image = slime.Icon
             iconImg.ScaleType = Enum.ScaleType.Fit
             iconImg.ZIndex = 2
             iconImg.Parent = btn
-            
-            btn.TextXAlignment = Enum.TextXAlignment.Left
-            local padding = Instance.new("UIPadding")
-            padding.PaddingLeft = UDim.new(0, 50)
-            padding.Parent = btn
         end
         
         btn.MouseButton1Click:Connect(function()
