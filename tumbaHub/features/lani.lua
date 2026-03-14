@@ -79,8 +79,14 @@ local function InitializeLaniUI()
                 btn.BackgroundColor3 = isTarget and Color3.fromRGB(0, 200, 100) or Color3.fromRGB(40, 45, 60)
                 
                 btn.Text = p.Name
-                btn.TextColor3 = Color3.new(1,1,1)
-                btn.Font = Enum.Font.Gotham
+                
+                if p.Team and p.Team.TeamColor then
+                    btn.TextColor3 = p.Team.TeamColor.Color
+                else
+                    btn.TextColor3 = Color3.new(1,1,1)
+                end
+                
+                btn.Font = Enum.Font.GothamBold
                 btn.TextSize = 14
                 btn.Parent = LaniPlayerList
                 Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
@@ -95,16 +101,34 @@ local function InitializeLaniUI()
                     end
                     RefreshLaniPlayers()
                 end)
+                
+                local teamConn
+                teamConn = p:GetPropertyChangedSignal("Team"):Connect(function()
+                    if p.Team and p.Team.TeamColor then
+                        btn.TextColor3 = p.Team.TeamColor.Color
+                    else
+                        btn.TextColor3 = Color3.new(1,1,1)
+                    end
+                end)
+                
+                btn.Destroying:Connect(function()
+                    if teamConn then teamConn:Disconnect() end
+                end)
             end
         end
-        LaniPlayerList.CanvasSize = UDim2.new(0, 0, 0, LaniListLayout.AbsoluteContentSize.Y)
+        task.spawn(function()
+            task.wait()
+            if LaniPlayerList and LaniListLayout then
+                LaniPlayerList.CanvasSize = UDim2.new(0, 0, 0, LaniListLayout.AbsoluteContentSize.Y + 10)
+            end
+        end)
     end
 
-    connections.LaniPlayerRefresh = Services.Players.PlayerAdded:Connect(function() if LaniContainer.Visible then RefreshLaniPlayers() end end)
-    connections.LaniPlayerRefresh2 = Services.Players.PlayerRemoving:Connect(function() if LaniContainer.Visible then RefreshLaniPlayers() end end)
+    connections.LaniPlayerRefresh = Services.Players.PlayerAdded:Connect(function() RefreshLaniPlayers() end)
+    connections.LaniPlayerRefresh2 = Services.Players.PlayerRemoving:Connect(function() RefreshLaniPlayers() end)
 
     Mega.Features.Lani.RefreshPlayers = RefreshLaniPlayers
-    if States.Misc.Lani.Enabled then RefreshLaniPlayers() end
+    RefreshLaniPlayers()
 end
 
 task.spawn(function()
