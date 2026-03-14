@@ -190,7 +190,8 @@ Mega.States = {
     StarCollector = {
         Enabled = false,
         Range = 60,
-        ESP = false
+        ESP = false,
+        AutoCollect = false
     },
     Metal = {
         Enabled = false,
