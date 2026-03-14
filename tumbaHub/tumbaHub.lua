@@ -69,6 +69,7 @@ Mega.LoadModule("features/farmer_cletus.lua")
 Mega.LoadModule("features/taliah.lua")
 Mega.LoadModule("features/metal_detector.lua")
 Mega.LoadModule("features/stella_star_collector.lua")
+Mega.LoadModule("features/noelle.lua")
 
 -- Load the main GUI
 Mega.LoadModule("gui/main_window.lua")
