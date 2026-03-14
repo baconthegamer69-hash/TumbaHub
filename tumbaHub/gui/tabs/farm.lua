@@ -144,7 +144,6 @@ UI.CreateToggleWithSettings(TabFrame, "toggle_taliah", "Taliah.Enabled", nil, {
 --#endregion
 
 --#region -- Fisherman
-UI.CreateSection(TabFrame, "toggle_fisherman")
 UI.CreateToggle(TabFrame, "toggle_autofish", "Fisherman.Enabled")
 --#endregion
 
@@ -169,7 +168,6 @@ end, {
 --#endregion
 
 --#region -- Lani
-UI.CreateSection(TabFrame, "toggle_lani")
 
 local laniContainer = Instance.new("Frame")
 laniContainer.Name = "LaniContainer"
