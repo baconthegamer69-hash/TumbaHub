@@ -20,8 +20,11 @@ if States.Taliah == nil then
         ESP = false,
         ESPTransparency = 0.2,
         AutoCollect = false,
+        AutoCollectLegit = false,
         CollectRadius = 5
     }
+elseif States.Taliah.AutoCollectLegit == nil then
+    States.Taliah.AutoCollectLegit = false
 end
 
 if not Mega.Objects.TaliahConnections then Mega.Objects.TaliahConnections = {} end
@@ -36,12 +39,14 @@ end
 table.clear(connections)
 
 -- Remote
-local HarvestRemote
+local CropHarvestRemote
 task.spawn(function()
     pcall(function()
-        HarvestRemote = Services.ReplicatedStorage:WaitForChild("rbxts_include", 10):WaitForChild("node_modules"):WaitForChild("@rbxts"):WaitForChild("net"):WaitForChild("out"):WaitForChild("_NetManaged"):WaitForChild("BedwarsHarvestCrop")
+        CropHarvestRemote = Services.ReplicatedStorage:WaitForChild("rbxts_include", 10):WaitForChild("node_modules"):WaitForChild("@rbxts"):WaitForChild("net"):WaitForChild("out"):WaitForChild("_NetManaged"):WaitForChild("CropHarvest")
     end)
 end)
+
+local vector = vector or {create = function(x, y, z) return Vector3.new(x, y, z) end}
 
 local function UpdateChickenESP()
     for _, block in ipairs(Services.CollectionService:GetTagged("HarvestableCrop")) do
@@ -134,7 +139,7 @@ end)
 -- Автономный цикл сбора
 local lastTaliahCheck = 0
 connections.AutoCollectLoop = Services.RunService.Heartbeat:Connect(function()
-    if not States.Taliah.Enabled or not States.Taliah.AutoCollect then return end
+    if not States.Taliah.Enabled or (not States.Taliah.AutoCollect and not States.Taliah.AutoCollectLegit) then return end
     
     -- Небольшой троттлинг для производительности
     if tick() - lastTaliahCheck < 0.1 then return end
@@ -150,30 +155,30 @@ connections.AutoCollectLoop = Services.RunService.Heartbeat:Connect(function()
             if stage == 4 then
                 local dist = (block.Position - root.Position).Magnitude
                 if dist <= States.Taliah.CollectRadius then
-                    -- 1. Сбор через Remote (если есть)
-                    if HarvestRemote then
-                        task.spawn(function()
-                            pcall(function()
-                                HarvestRemote:InvokeServer({
-                                    blockInstance = block
-                                })
-                            end)
-                        end)
-                    end
-                    
-                    -- 2. Сбор через ProximityPrompt (резервный вариант)
-                    local prompt = block:FindFirstChildWhichIsA("ProximityPrompt", true)
-                    if prompt and prompt.Enabled then
-                        if fireproximityprompt then
-                            fireproximityprompt(prompt)
-                        else
+                    if States.Taliah.AutoCollect then
+                        -- Быстрый сбор как у Cletus
+                        if CropHarvestRemote then
+                            local blockPos = Vector3.new(math.round(block.Position.X / 3), math.round(block.Position.Y / 3), math.round(block.Position.Z / 3))
+                            local args = {{ ["position"] = vector.create(blockPos.X, blockPos.Y, blockPos.Z) }}
                             task.spawn(function()
-                                pcall(function()
-                                    prompt:InputHoldBegin()
-                                    task.wait(prompt.HoldDuration)
-                                    prompt:InputHoldEnd()
-                                end)
+                                pcall(function() CropHarvestRemote:InvokeServer(unpack(args)) end)
                             end)
+                        end
+                    elseif States.Taliah.AutoCollectLegit then
+                        -- Сбор через ProximityPrompt (Legit)
+                        local prompt = block:FindFirstChildWhichIsA("ProximityPrompt", true)
+                        if prompt and prompt.Enabled then
+                            if fireproximityprompt then
+                                fireproximityprompt(prompt)
+                            else
+                                task.spawn(function()
+                                    pcall(function()
+                                        prompt:InputHoldBegin()
+                                        task.wait(prompt.HoldDuration)
+                                        prompt:InputHoldEnd()
+                                    end)
+                                end)
+                            end
                         end
                     end
                 end
