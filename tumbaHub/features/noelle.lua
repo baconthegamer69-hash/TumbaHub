@@ -40,9 +40,21 @@ connections.NoelleBindLoop = Services.RunService.Heartbeat:Connect(function()
     if not RequestMoveSlime then return end
     if tick() - lastBindTick < 1 then return end
     lastBindTick = tick()
-    for slimeId, targetId in pairs(States.Noelle.Binds) do
-        local args = {{ slimeId = slimeId, targetPlayerUserId = targetId }}
-        task.spawn(function() pcall(function() RequestMoveSlime:InvokeServer(unpack(args)) end) end)
+    
+    if not SlimeDataFolder then return end
+    local myName = LocalPlayer.Name
+    
+    for slimeType, targetId in pairs(States.Noelle.Binds) do
+        local slimeName = myName .. "_Slime_" .. slimeType
+        local slimeObj = SlimeDataFolder:FindFirstChild(slimeName)
+        if slimeObj then
+            local slimeId = slimeObj:GetAttribute("Id")
+            if not slimeId and slimeObj:FindFirstChild("Id") then slimeId = slimeObj.Id.Value end
+            if slimeId then
+                local args = {{ slimeId = slimeId, targetPlayerUserId = targetId }}
+                task.spawn(function() pcall(function() RequestMoveSlime:InvokeServer(unpack(args)) end) end)
+            end
+        end
     end
 end)
 
