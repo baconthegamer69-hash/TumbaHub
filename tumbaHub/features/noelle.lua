@@ -164,7 +164,7 @@ local function InitializeNoelleUI()
             local iconImg = Instance.new("ImageLabel")
             iconImg.Name = "Icon"
             iconImg.Size = UDim2.new(0, 26, 0, 26)
-            iconImg.Position = UDim2.new(0, 15, 0.5, -13)
+            iconImg.Position = UDim2.new(0, -35, 0.5, -13)
             iconImg.BackgroundTransparency = 1
             iconImg.Image = slime.Icon
             iconImg.ScaleType = Enum.ScaleType.Fit
