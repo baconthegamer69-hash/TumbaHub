@@ -24,8 +24,6 @@ task.spawn(function()
     end)
 end)
 
-local vector = vector or {create = function(x, y, z) return Vector3.new(x, y, z) end}
-
 -- Cletus ESP Logic
 local cletusEspFolder = Services.CoreGui:FindFirstChild("CletusESP")
 if not cletusEspFolder then
@@ -34,51 +32,102 @@ if not cletusEspFolder then
     cletusEspFolder.Parent = Services.CoreGui
 end
 
-local function UpdateCropESP()
-    for _, crop in ipairs(Services.CollectionService:GetTagged("Crop")) do
-        if crop:IsA("BasePart") then
-            local stage = crop:GetAttribute("CropStage")
-            local espName = crop:GetDebugId()
-            local esp = cletusEspFolder:FindFirstChild(espName)
-            
-            if States.Cletus.Enabled and States.Cletus.ESP and stage and stage >= 3 then
-                if not esp then
-                    esp = Instance.new("BoxHandleAdornment")
-                    esp.Name = espName
-                    esp.Adornee = crop
-                    esp.Size = crop.Size + Vector3.new(0.1, 0.1, 0.1)
-                    
-                    local color = Color3.fromRGB(0, 255, 0)
-                    local cName = crop.Name:lower()
-                    if cName:find("carrot") then
-                        color = Color3.fromRGB(255, 170, 0)
-                    elseif cName:find("melon") then
-                        color = Color3.fromRGB(170, 255, 127)
-                    end
-                    esp.Color3 = color
-                    esp.AlwaysOnTop = true
-                    esp.ZIndex = 5
-                    esp.Parent = cletusEspFolder
-                end
-                esp.Transparency = States.Cletus.ESPTransparency
-            else
-                if esp then esp:Destroy() end
-            end
+local espCache = {}
+local cropConnections = {}
+
+local function ClearESP()
+    for crop, esp in pairs(espCache) do
+        if esp then esp:Destroy() end
+    end
+    table.clear(espCache)
+    cletusEspFolder:ClearAllChildren()
+end
+
+local function UpdateCropESP(crop)
+    if not crop or not crop.Parent or not crop:IsA("BasePart") then 
+        if espCache[crop] then
+            espCache[crop]:Destroy()
+            espCache[crop] = nil
         end
+        return 
+    end
+
+    local stage = crop:GetAttribute("CropStage")
+    local isReady = (stage and stage >= 3)
+    local shouldShow = States.Cletus.Enabled and States.Cletus.ESP and isReady
+
+    if shouldShow then
+        local esp = espCache[crop]
+        if not esp then
+            esp = Instance.new("BoxHandleAdornment")
+            esp.Adornee = crop
+            esp.Size = crop.Size + Vector3.new(0.1, 0.1, 0.1)
+            
+            local color = Color3.fromRGB(0, 255, 0)
+            local cName = crop.Name:lower()
+            if cName:find("carrot") then
+                color = Color3.fromRGB(255, 170, 0)
+            elseif cName:find("melon") then
+                color = Color3.fromRGB(170, 255, 127)
+            end
+            esp.Color3 = color
+            esp.AlwaysOnTop = true
+            esp.ZIndex = 5
+            esp.Parent = cletusEspFolder
+            
+            espCache[crop] = esp
+
+            local conn
+            conn = crop.AncestryChanged:Connect(function(_, parent)
+                if not parent then
+                    if espCache[crop] then espCache[crop]:Destroy() espCache[crop] = nil end
+                    conn:Disconnect()
+                end
+            end)
+        end
+        esp.Transparency = States.Cletus.ESPTransparency
+    else
+        if espCache[crop] then
+            espCache[crop]:Destroy()
+            espCache[crop] = nil
+        end
+    end
+end
+
+local function RefreshAllESP()
+    if States.Cletus.Enabled and States.Cletus.ESP then
+        for _, crop in ipairs(Services.CollectionService:GetTagged("Crop")) do
+            UpdateCropESP(crop)
+        end
+    else
+        ClearESP()
     end
 end
 
 local function OnCropAdded(crop)
     if crop:IsA("BasePart") then
-        local conn = crop:GetAttributeChangedSignal("CropStage"):Connect(function()
-            UpdateCropESP()
-        end)
-        table.insert(connections, conn)
-        UpdateCropESP()
+        if not cropConnections[crop] then
+            cropConnections[crop] = crop:GetAttributeChangedSignal("CropStage"):Connect(function()
+                UpdateCropESP(crop)
+            end)
+        end
+        UpdateCropESP(crop)
     end
 end
 
 connections.CropAdded = Services.CollectionService:GetInstanceAddedSignal("Crop"):Connect(OnCropAdded)
+
+connections.CropRemoved = Services.CollectionService:GetInstanceRemovedSignal("Crop"):Connect(function(crop)
+    if cropConnections[crop] then
+        cropConnections[crop]:Disconnect()
+        cropConnections[crop] = nil
+    end
+    if espCache[crop] then
+        espCache[crop]:Destroy()
+        espCache[crop] = nil
+    end
+end)
+
 for _, crop in ipairs(Services.CollectionService:GetTagged("Crop")) do
     OnCropAdded(crop)
 end
@@ -92,7 +141,7 @@ connections.StateWatcher = Services.RunService.Heartbeat:Connect(function()
     if currentEspState ~= lastEspState or currentTrans ~= lastEspTrans then
         lastEspState = currentEspState
         lastEspTrans = currentTrans
-        UpdateCropESP()
+        RefreshAllESP()
     end
 end)
 
@@ -100,7 +149,7 @@ local lastCletusRun = 0
 connections.AutoHarvestLoop = Services.RunService.Heartbeat:Connect(function()
     if not States.Cletus.Enabled or not States.Cletus.AutoHarvest then return end
     
-    if tick() - lastCletusRun < 0.5 then return end
+    if tick() - lastCletusRun < 0.2 then return end
     lastCletusRun = tick()
 
     local char = LocalPlayer.Character
@@ -115,7 +164,7 @@ connections.AutoHarvestLoop = Services.RunService.Heartbeat:Connect(function()
                 if dist <= States.Cletus.Range then
                     if CropHarvestRemote then
                         local blockPos = Vector3.new(math.round(crop.Position.X / 3), math.round(crop.Position.Y / 3), math.round(crop.Position.Z / 3))
-                        local args = {{ ["position"] = vector.create(blockPos.X, blockPos.Y, blockPos.Z) }}
+                        local args = {{ ["position"] = Vector3.new(blockPos.X, blockPos.Y, blockPos.Z) }}
                         task.spawn(function()
                             pcall(function() CropHarvestRemote:InvokeServer(unpack(args)) end)
                         end)
