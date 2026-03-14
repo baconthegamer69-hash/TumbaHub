@@ -72,8 +72,22 @@ UI.CreateToggleWithSettings(TabFrame, "toggle_auto_deposit", "Misc.AutoDeposit.E
 
 --#region -- Lani
 UI.CreateSection(TabFrame, "toggle_lani")
-UI.CreateToggleWithSettings(TabFrame, "toggle_lani", "Misc.Lani.Enabled", nil, {
-    UI.CreateKeybindButton(nil, "keybind_lani", "Misc.Lani.Keybind")
+
+local laniContainer = Instance.new("Frame")
+laniContainer.Name = "LaniContainer"
+laniContainer.Size = UDim2.new(1, 0, 0, 200)
+laniContainer.BackgroundTransparency = 1
+Mega.Objects.LaniContainer = laniContainer
+
+task.spawn(function()
+    pcall(function() Mega.LoadModule("features/lani.lua") end)
+end)
+
+UI.CreateToggleWithSettings(TabFrame, "toggle_lani", "Misc.Lani.Enabled", function(state)
+    Mega.States.Misc.Lani.Enabled = state
+    if Mega.Features.Lani and Mega.Features.Lani.RefreshPlayers then Mega.Features.Lani.RefreshPlayers() end
+end, {
+    UI.CreateKeybindButton(nil, "keybind_lani", "Misc.Lani.Keybind", function(key) Mega.States.Misc.Lani.Keybind = key end),
+    laniContainer
 })
 --#endregion
-
