@@ -196,6 +196,7 @@ Mega.States = {
         Enabled = false,
         ESP = true,
         AutoCollect = false,
+        AutoCollectLegit = false,
         Range = 25
     },
     Taliah = {
@@ -203,6 +204,7 @@ Mega.States = {
         ESP = false,
         ESPTransparency = 0.2,
         AutoCollect = false,
+        AutoCollectLegit = false,
         CollectRadius = 5
     },
     Keybinds = {
