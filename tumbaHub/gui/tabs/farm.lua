@@ -90,9 +90,21 @@ end, {
 --#endregion
 
 --#region -- Star Collector
-UI.CreateToggleWithSettings(TabFrame, "toggle_star_collector", "StarCollector.Enabled", nil, {
-    UI.CreateToggle(nil, "toggle_star_collector_esp", "StarCollector.ESP"),
-    UI.CreateSlider(nil, "slider_star_collector_range", "StarCollector.Range", 5, 100)
+task.spawn(function()
+    pcall(function() Mega.LoadModule("features/stella_star_collector.lua") end)
+end)
+
+UI.CreateToggleWithSettings(TabFrame, "toggle_star_collector", "StarCollector.Enabled", function(state)
+    Mega.States.StarCollector.Enabled = state
+    if Mega.Features.StarCollector then Mega.Features.StarCollector.SetEnabled(state) end
+end, {
+    UI.CreateToggle(nil, "toggle_star_collector_esp", "StarCollector.ESP", function(state)
+        Mega.States.StarCollector.ESP = state
+        if Mega.Features.StarCollector then Mega.Features.StarCollector.UpdateESP() end
+    end),
+    UI.CreateSlider(nil, "slider_star_collector_range", "StarCollector.Range", 5, 100, function(val)
+        Mega.States.StarCollector.Range = val
+    end)
 })
 --#endregion
 
