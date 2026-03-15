@@ -68,15 +68,15 @@ local function getWeapon()
     if char:FindFirstChild("HandInvItem") and char.HandInvItem.Value then
         return char.HandInvItem.Value
     end
-    local tool = char:FindFirstChildOfClass("Tool")
-    if tool and (tool.Name:lower():find("sword") or tool.Name:lower():find("blade") or tool.Name:lower():find("scythe")) then
-        return tool
-    end
+    
     local inv = Services.ReplicatedStorage:FindFirstChild("Inventories") and Services.ReplicatedStorage.Inventories:FindFirstChild(LocalPlayer.Name)
     if inv then
-        for _, v in pairs(inv:GetChildren()) do
-            if v.Name:lower():find("sword") or v.Name:lower():find("blade") or v.Name:lower():find("scythe") then 
-                return v 
+        local possibleWeapons = {"sword", "blade", "scythe", "dao", "mace", "hammer", "dagger", "sickle", "glove", "axe", "pickaxe"}
+        for _, wName in ipairs(possibleWeapons) do
+            for _, v in pairs(inv:GetChildren()) do
+                if v.Name:lower():find(wName) then 
+                    return v 
+                end
             end
         end
     end
@@ -140,7 +140,7 @@ connections.KillauraLoop = Services.RunService.Heartbeat:Connect(function()
         marker.Adornee = tHrp -- Вешаем маркер на цель
         
         local direction = (tHrp.Position - hrp.Position).Unit
-        local spoofedSelfPos = closestDist > 14 and (tHrp.Position - (direction * 14)) or hrp.Position
+        local spoofedSelfPos = closestDist > 14.4 and (tHrp.Position - (direction * 14.4)) or hrp.Position
         
         local args = { { ["chargedAttack"] = { ["chargeRatio"] = 0 }, ["entityInstance"] = closestTarget, ["validate"] = { ["targetPosition"] = { ["value"] = vec3(tHrp.Position.X, tHrp.Position.Y, tHrp.Position.Z) }, ["selfPosition"] = { ["value"] = vec3(spoofedSelfPos.X, spoofedSelfPos.Y, spoofedSelfPos.Z) }, ["raycast"] = { ["cameraPosition"] = { ["value"] = vec3(spoofedSelfPos.X, spoofedSelfPos.Y + 3, spoofedSelfPos.Z) }, ["cursorDirection"] = { ["value"] = vec3(direction.X, direction.Y, direction.Z) } } }, ["weapon"] = weapon } }
         task.spawn(function() pcall(function() SwordHitRemote:FireServer(unpack(args)) end) end)
