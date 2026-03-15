@@ -62,7 +62,14 @@ end, {
     UI.CreateSlider(nil, "slider_spider_speed", "Player.SpiderSpeed", 1, 100)
 })
 
-UI.CreateToggleWithSettings(TabFrame, "toggle_scaffold", "Player.Scaffold.Enabled", nil, {
+task.spawn(function()
+    pcall(function() Mega.LoadModule("features/scaffold.lua") end)
+end)
+
+UI.CreateToggleWithSettings(TabFrame, "toggle_scaffold", "Player.Scaffold.Enabled", function(state)
+    Mega.States.Player.Scaffold.Enabled = state
+    if Mega.Features.Scaffold and Mega.Features.Scaffold.SetEnabled then Mega.Features.Scaffold.SetEnabled(state) end
+end, {
     UI.CreateKeybindButton(nil, "keybind_scaffold", "Keybinds.Scaffold"),
     UI.CreateSlider(nil, "slider_scaffold_yoffset", "Player.Scaffold.YOffset", -100, 0, function(val) Mega.States.Player.Scaffold.YOffset = val / 10 end),
     UI.CreateSlider(nil, "slider_scaffold_predict", "Player.Scaffold.Predict", 0, 100, function(val) Mega.States.Player.Scaffold.Predict = val / 100 end)
