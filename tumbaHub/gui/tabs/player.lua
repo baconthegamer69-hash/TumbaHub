@@ -115,14 +115,18 @@ local function onRenderStep()
              char.Humanoid.WalkSpeed = 16 -- Default speed
         end
     end
-    
-    if Mega.States.Player.InfiniteJump then
-        Mega.Services.UserInputService.JumpRequest:Connect(function()
-            if Mega.States.Player.InfiniteJump then
-                 char.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-            end
-        end)
-    end
 end
 
 Mega.Services.RunService.RenderStepped:Connect(onRenderStep)
+
+-- Подключаем Infinite Jump ровно один раз, чтобы избежать утечки памяти и лагов
+if not Mega.Objects.Connections.InfiniteJump then
+    Mega.Objects.Connections.InfiniteJump = Mega.Services.UserInputService.JumpRequest:Connect(function()
+        if Mega.States.Player.InfiniteJump then
+            local char = Mega.Services.LocalPlayer.Character
+            if char and char:FindFirstChildOfClass("Humanoid") then
+                char:FindFirstChildOfClass("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping)
+            end
+        end
+    end)
+end
