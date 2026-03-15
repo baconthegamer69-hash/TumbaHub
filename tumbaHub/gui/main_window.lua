@@ -371,6 +371,20 @@ end)
 
 end -- End of Mega.InitializeMainGUI
 
+local function LoadStartupConfig()
+    if not Mega.ConfigSystem or not Mega.ConfigSystem.Load then return end
+    pcall(function()
+        if isfile and readfile and isfile("tumbaHub/configs/LastConfig.txt") then
+            local lastConf = readfile("tumbaHub/configs/LastConfig.txt")
+            if lastConf and lastConf ~= "" then
+                Mega.ConfigSystem.Load(lastConf)
+            end
+        end
+    end)
+    -- Загружаем autosave поверх, чтобы восстановить точное состояние до телепорта
+    Mega.ConfigSystem.Load("autosave")
+end
+
 if not Mega.HasSavedLanguage() then
     local LanguagePrompt = Instance.new("ScreenGui")
     LanguagePrompt.Name = "LanguagePrompt"
@@ -411,9 +425,7 @@ if not Mega.HasSavedLanguage() then
     local function OnLanguageSelected(lang)
         Mega.Localization.CurrentLanguage = lang
         Mega.SaveLanguage(lang)
-        if Mega.ConfigSystem and Mega.ConfigSystem.Load then
-            Mega.ConfigSystem.Load("autosave")
-        end
+        LoadStartupConfig()
         LanguagePrompt:Destroy()
         if Mega.ShowNotification then
             Mega.ShowNotification("Меню открывается на RightShift", 5)
@@ -439,6 +451,7 @@ if not Mega.HasSavedLanguage() then
         btn.MouseButton1Click:Connect(function() OnLanguageSelected(lang.Code) end)
     end
 else
+    LoadStartupConfig()
     if Mega.ShowNotification then
         Mega.ShowNotification("Меню открывается на RightShift", 5)
     end
