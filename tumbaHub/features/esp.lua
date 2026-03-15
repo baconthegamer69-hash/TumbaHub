@@ -185,28 +185,27 @@ end
 local function UpdateESP()
     local camera = Services.Workspace.CurrentCamera
     local screenCenter = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y)
+    
+    local localChar = Services.LocalPlayer.Character
+    local localRoot = localChar and localChar:FindFirstChild("HumanoidRootPart")
 
     for player, esp in pairs(Mega.Objects.ESP) do
-        if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-            local rootPart = player.Character.HumanoidRootPart
+        local isVisible = false
+        
+        if player and player.Character and localRoot then
+            local rootPart = player.Character:FindFirstChild("HumanoidRootPart")
             local head = player.Character:FindFirstChild("Head")
             local humanoid = player.Character:FindFirstChild("Humanoid")
 
-            if head and humanoid then
-                local isTeammate = player.Team and (player.Team == Services.LocalPlayer.Team)
+            if rootPart and head and humanoid and humanoid.Health > 0 then
+                local isTeammate = player.Team and Services.LocalPlayer.Team and (player.Team == Services.LocalPlayer.Team)
                 
-                if isTeammate and not States.ESP.ShowTeam then
-                    esp.box.Visible = false
-                    esp.name.Visible = false
-                    esp.distance.Visible = false
-                    esp.healthBarBack.Visible = false
-                    esp.healthBarFront.Visible = false
-                    esp.tracer.Visible = false
-                else
+                if not (isTeammate and not States.ESP.ShowTeam) then
                     local screenPos, onScreen = camera:WorldToViewportPoint(rootPart.Position)
-                    local distance = (Services.LocalPlayer.Character.HumanoidRootPart.Position - rootPart.Position).Magnitude
+                    local distance = (localRoot.Position - rootPart.Position).Magnitude
 
                     if onScreen and distance <= States.ESP.MaxDistance then
+                        isVisible = true
                         local scale = 1000 / distance
                         local width = scale * 2
                         local height = scale * 3
@@ -260,18 +259,12 @@ local function UpdateESP()
                         else
                             esp.tracer.Visible = false
                         end
-
-                    else
-                        esp.box.Visible = false
-                        esp.name.Visible = false
-                        esp.distance.Visible = false
-                        esp.healthBarBack.Visible = false
-                        esp.healthBarFront.Visible = false
-                        esp.tracer.Visible = false
                     end
                 end
             end
-        else
+        end
+        
+        if not isVisible then
             esp.box.Visible = false
             esp.name.Visible = false
             esp.distance.Visible = false
