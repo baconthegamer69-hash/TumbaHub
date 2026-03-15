@@ -16,7 +16,7 @@ local States = Mega.States
 -- Гарантируем, что настройки существуют
 if not States.Combat then States.Combat = {} end
 if not States.Combat.BedNuke then
-    States.Combat.BedNuke = { Enabled = false, Range = 25, PacketsPerTick = 1 }
+    States.Combat.BedNuke = { Enabled = false, Range = 25, MinRange = 1, PacketsPerTick = 1, Delay = 0 }
 end
 
 if not Mega.Objects.BedNukeConnections then Mega.Objects.BedNukeConnections = {} end
@@ -60,7 +60,8 @@ local function BedNukeLoop()
     local myTeamId = LocalPlayer:GetAttribute("Team")
     local beds = Services.CollectionService:GetTagged("bed")
     local closestBed = nil
-    local minDistance = States.Combat.BedNuke.Range
+    local closestDist = States.Combat.BedNuke.Range
+    local minAllowedDist = States.Combat.BedNuke.MinRange or 1
 
     for _, bed in ipairs(beds) do
         if bed:IsA("BasePart") or bed:IsA("Model") then
@@ -71,8 +72,8 @@ local function BedNukeLoop()
                 
                 if bedTeamId ~= myTeamId and (not health or health > 0) then
                     local dist = (bedPart.Position - hrp.Position).Magnitude
-                    if dist <= minDistance then
-                        minDistance = dist
+                    if dist <= closestDist and dist >= minAllowedDist then
+                        closestDist = dist
                         closestBed = bed
                     end
                 end
@@ -99,8 +100,10 @@ local function BedNukeLoop()
                 }
             }
             
+            local delayMs = States.Combat.BedNuke.Delay or 0
             for i = 1, States.Combat.BedNuke.PacketsPerTick do
                 task.spawn(function()
+                    if delayMs > 0 then task.wait(delayMs / 1000) end
                     pcall(function()
                         if DamageBlockRemote:IsA("RemoteEvent") then
                             DamageBlockRemote:FireServer(unpack(args))
