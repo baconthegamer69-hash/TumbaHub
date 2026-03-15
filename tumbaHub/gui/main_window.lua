@@ -272,12 +272,12 @@ StatusLayout.Padding = UDim.new(0, 4)
 
 local Watermark = Instance.new("TextLabel", StatusIndicator)
 Watermark.Name = "Watermark"
-Watermark.Text = "TUMBA SYSTEM"
+Watermark.Text = "TUMBA HUB"
 Watermark.Font = Enum.Font.GothamBlack
 Watermark.TextSize = 22
 Watermark.TextColor3 = Settings.Menu.AccentColor
 Watermark.Size = UDim2.new(1, 0, 0, 30)
-Watermark.BackgroundTransparency = 1
+Watermark.BackgroundTransparency = 0.7
 Watermark.TextXAlignment = Enum.TextXAlignment.Right
 Watermark.LayoutOrder = -1
 Instance.new("UIStroke", Watermark).Thickness = 2
