@@ -16,6 +16,7 @@ Mega.Localization = {
         ["section_settings_config"] = { ru = "💾 УПРАВЛЕНИЕ КОНФИГАМИ", en = "💾 CONFIG MANAGEMENT", es = "💾 GESTIÓN DE CONFIGURACIONES", pt = "💾 GERENCIAMENTO DE CONFIG", ko = "💾 설정 관리", ja = "💾 設定管理", uk = "💾 КЕРУВАННЯ КОНФІГАМИ" },
         ["textbox_config_name"] = { ru = "Введите имя конфига...", en = "Enter config name...", es = "Introduce nombre de config...", pt = "Digite nome do config...", ko = "설정 이름 입력...", ja = "設定名を入力...", uk = "Введіть ім'я конфігу..." },
         ["button_config_save"] = { ru = "💾 Сохранить конфиг", en = "💾 Save Config", es = "💾 Guardar Configuración", pt = "💾 Salvar Configuração", ko = "💾 설정 저장", ja = "💾 設定保存", uk = "💾 Зберегти конфіг" },
+        ["button_config_create"] = { ru = "➕ Создать новый конфиг", en = "➕ Create New Config", es = "➕ Crear Nueva Configuración", pt = "➕ Criar Nova Configuração", ko = "➕ 새 설정 만들기", ja = "➕ 新しい設定を作成", uk = "➕ Створити новий конфіг" },
         ["dropdown_config_list"] = { ru = "Выберите конфиг", en = "Select Config", es = "Seleccionar Configuración", pt = "Selecionar Configuração", ko = "설정 선택", ja = "設定選択", uk = "Виберіть конфіг" },
         ["button_config_load"] = { ru = "📂 Загрузить конфиг", en = "📂 Load Config", es = "📂 Cargar Configuración", pt = "📂 Carregar Configuração", ko = "📂 설정 로드", ja = "📂 設定読み込み", uk = "📂 Завантажити конфіг" },
         ["button_config_delete"] = { ru = "🗑️ Удалить конфиг", en = "🗑️ Delete Config", es = "🗑️ Eliminar Configuración", pt = "🗑️ Deletar Configuração", ko = "🗑️ 설정 삭제", ja = "🗑️ 設定削除", uk = "🗑️ Видалити конфіг" },
