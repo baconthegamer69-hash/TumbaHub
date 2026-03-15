@@ -104,99 +104,212 @@ end
 --#endregion
 
 --#region Player ESP Logic
--- NOTE: This is a standard implementation of Player ESP logic, as the original was not fully provided.
-local function createESPDrawings(player)
-    local character = player.Character
-    if not character or not character.PrimaryPart then return end
+if not Mega.Objects.ESP then Mega.Objects.ESP = {} end
 
-    local drawing = {}
-    drawing.Container = Instance.new("BillboardGui", espFolder)
-    drawing.Container.Adornee = character.PrimaryPart
-    drawing.Container.AlwaysOnTop = true
-    drawing.Container.Size = UDim2.fromOffset(200, 200)
-    drawing.Container.StudsOffset = Vector3.new(0, 2, 0)
-    
-    drawing.Box = Instance.new("Frame", drawing.Container)
-    drawing.Box.Size = UDim2.fromScale(1,1)
-    drawing.Box.BackgroundTransparency = 1
-    drawing.Box.BorderColor3 = States.ESP.EnemyColor
-    drawing.Box.BorderSizePixel = 2
-    
-    drawing.NameLabel = Instance.new("TextLabel", drawing.Container)
-    drawing.NameLabel.Position = UDim2.fromScale(0.5, -0.2)
-    drawing.NameLabel.Size = UDim2.fromScale(1, 0.2)
-    drawing.NameLabel.BackgroundTransparency = 1
-    drawing.NameLabel.Text = player.Name
-    drawing.NameLabel.TextColor3 = Color3.new(1,1,1)
-    drawing.NameLabel.Font = Enum.Font.SourceSans
-    drawing.NameLabel.TextSize = 16
-    drawing.NameLabel.TextStrokeTransparency = 0
-    
-    drawing.DistanceLabel = Instance.new("TextLabel", drawing.Container)
-    drawing.DistanceLabel.Position = UDim2.fromScale(0.5, 1.1)
-    drawing.DistanceLabel.Size = UDim2.fromScale(1, 0.2)
-    drawing.DistanceLabel.BackgroundTransparency = 1
-    drawing.DistanceLabel.TextColor3 = Color3.new(1,1,1)
-    drawing.DistanceLabel.Font = Enum.Font.SourceSans
-    drawing.DistanceLabel.TextSize = 14
-    
-    -- Add more drawings like Health, Tracers etc. here
+local function CreateESP(player)
+    if player == Services.LocalPlayer then return end
 
-    return drawing
+    local esp = {
+        box = Drawing.new("Square"),
+        name = Drawing.new("Text"),
+        distance = Drawing.new("Text"),
+        healthBarBack = Drawing.new("Square"),
+        healthBarFront = Drawing.new("Square"),
+        tracer = Drawing.new("Line")
+    }
+
+    esp.box.Visible = false
+    esp.box.Thickness = 2
+    esp.box.Filled = false
+    esp.box.ZIndex = 1
+
+    esp.name.Visible = false
+    esp.name.Size = 14
+    esp.name.Center = true
+    esp.name.Outline = true
+    esp.name.ZIndex = 1
+
+    esp.distance.Visible = false
+    esp.distance.Size = 12
+    esp.distance.Center = true
+    esp.distance.Outline = true
+    esp.distance.ZIndex = 1
+
+    esp.healthBarBack.Visible = false
+    esp.healthBarBack.Thickness = 1
+    esp.healthBarBack.Color = Color3.fromRGB(0, 0, 0)
+    esp.healthBarBack.Filled = true
+
+    esp.healthBarFront.Visible = false
+    esp.healthBarFront.Thickness = 1
+    esp.healthBarFront.Filled = true
+
+    esp.tracer.Visible = false
+    esp.tracer.Thickness = 1
+    esp.tracer.ZIndex = 1
+
+    Mega.Objects.ESP[player] = esp
 end
 
-local function updateESP()
-    espFolder.Enabled = States.ESP.Enabled
-    if not States.ESP.Enabled then return end
-    
-    for _, player in ipairs(Services.Players:GetPlayers()) do
-        if player == Services.LocalPlayer then continue end
-        
-        local esp = player:FindFirstChild("TumbaESP")
-        if not esp then
-            esp = Instance.new("Folder", player)
-            esp.Name = "TumbaESP"
+local function RemoveESP(player)
+    if Mega.Objects.ESP[player] then
+        for _, drawing in pairs(Mega.Objects.ESP[player]) do
+            drawing:Remove()
         end
-
-        local drawing = esp:FindFirstChild("Drawing")
-        if not player.Character or not player.Character.PrimaryPart or player.Character.Humanoid.Health <= 0 then
-            if drawing then drawing:Destroy() end
-            continue
-        end
-
-        if not drawing then
-            drawing = createESPDrawings(player)
-            drawing.Container.Name = "Drawing"
-            drawing.Container.Parent = esp
-        end
-        
-        local distance = (Services.LocalPlayer.Character.PrimaryPart.Position - player.Character.PrimaryPart.Position).Magnitude
-        if distance > States.ESP.MaxDistance then
-            drawing.Container.Visible = false
-            continue
-        end
-        drawing.Container.Visible = true
-        
-        -- Update visibility based on settings
-        drawing.Box.Visible = States.ESP.Boxes
-        drawing.NameLabel.Visible = States.ESP.Names
-        drawing.DistanceLabel.Visible = States.ESP.Distance
-        
-        -- Update values
-        drawing.DistanceLabel.Text = string.format("%.1fm", distance)
-        -- Update colors, health bars etc.
+        Mega.Objects.ESP[player] = nil
     end
 end
+
+local function UpdateESPColors()
+    for player, esp in pairs(Mega.Objects.ESP) do
+        if player and player.Character and player.Team then
+            local isTeam = States.ESP.ShowTeam and player.Team == Services.LocalPlayer.Team
+            local isEnemy = player.Team ~= Services.LocalPlayer.Team
+
+            if isTeam then
+                esp.box.Color = States.ESP.TeamColor
+                esp.name.Color = States.ESP.TeamColor
+                esp.distance.Color = States.ESP.TeamColor
+                esp.tracer.Color = States.ESP.TeamColor
+            elseif isEnemy then
+                esp.box.Color = States.ESP.EnemyColor
+                esp.name.Color = States.ESP.EnemyColor
+                esp.distance.Color = States.ESP.EnemyColor
+                esp.tracer.Color = States.ESP.EnemyColor
+            else
+                esp.box.Color = States.ESP.NeutralColor
+                esp.name.Color = States.ESP.NeutralColor
+                esp.distance.Color = States.ESP.NeutralColor
+                esp.tracer.Color = States.ESP.NeutralColor
+            end
+        end
+    end
+end
+
+local function UpdateESP()
+    local camera = Services.Workspace.CurrentCamera
+    local screenCenter = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y)
+
+    for player, esp in pairs(Mega.Objects.ESP) do
+        if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            local rootPart = player.Character.HumanoidRootPart
+            local head = player.Character:FindFirstChild("Head")
+            local humanoid = player.Character:FindFirstChild("Humanoid")
+
+            if head and humanoid then
+                local screenPos, onScreen = camera:WorldToViewportPoint(rootPart.Position)
+                local distance = (Services.LocalPlayer.Character.HumanoidRootPart.Position - rootPart.Position).Magnitude
+
+                if onScreen and distance <= States.ESP.MaxDistance then
+                    local scale = 1000 / distance
+                    local width = scale * 2
+                    local height = scale * 3
+
+                    if States.ESP.Boxes then
+                        esp.box.Visible = States.ESP.Enabled
+                        esp.box.Position = Vector2.new(screenPos.X - width / 2, screenPos.Y - height / 2)
+                        esp.box.Size = Vector2.new(width, height)
+                    else
+                        esp.box.Visible = false
+                    end
+
+                    if States.ESP.Names then
+                        esp.name.Visible = States.ESP.Enabled
+                        esp.name.Position = Vector2.new(screenPos.X, screenPos.Y - height / 2 - 20)
+                        esp.name.Text = player.Name
+                    else
+                        esp.name.Visible = false
+                    end
+
+                    if States.ESP.Distance then
+                        esp.distance.Visible = States.ESP.Enabled
+                        esp.distance.Position = Vector2.new(screenPos.X, screenPos.Y + height / 2 + 10)
+                        esp.distance.Text = Mega.GetText("esp_studs", math.floor(distance))
+                    else
+                        esp.distance.Visible = false
+                    end
+
+                    if States.ESP.Health then
+                        local healthPercent = math.clamp(humanoid.Health / humanoid.MaxHealth, 0, 1)
+                        local barHeight = height * healthPercent
+                        local barColor = Color3.fromHSV(0.33 * healthPercent, 1, 1)
+
+                        esp.healthBarBack.Visible = States.ESP.Enabled
+                        esp.healthBarBack.Position = Vector2.new(screenPos.X - width / 2 - 7, screenPos.Y - height / 2)
+                        esp.healthBarBack.Size = Vector2.new(4, height)
+
+                        esp.healthBarFront.Visible = States.ESP.Enabled
+                        esp.healthBarFront.Color = barColor
+                        esp.healthBarFront.Position = Vector2.new(screenPos.X - width / 2 - 7, screenPos.Y - height / 2 + (height - barHeight))
+                        esp.healthBarFront.Size = Vector2.new(4, barHeight)
+                    else
+                        esp.healthBarBack.Visible = false
+                        esp.healthBarFront.Visible = false
+                    end
+
+                    if States.ESP.Tracers then
+                        esp.tracer.Visible = States.ESP.Enabled
+                        esp.tracer.From = Vector2.new(screenPos.X, screenPos.Y + height / 2)
+                        esp.tracer.To = screenCenter
+                    else
+                        esp.tracer.Visible = false
+                    end
+
+                else
+                    esp.box.Visible = false
+                    esp.name.Visible = false
+                    esp.distance.Visible = false
+                    esp.healthBarBack.Visible = false
+                    esp.healthBarFront.Visible = false
+                    esp.tracer.Visible = false
+                end
+            end
+        else
+            esp.box.Visible = false
+            esp.name.Visible = false
+            esp.distance.Visible = false
+            esp.healthBarBack.Visible = false
+            esp.healthBarFront.Visible = false
+            esp.tracer.Visible = false
+        end
+    end
+end
+
+-- Initialize ESP for all players
+for _, player in pairs(Services.Players:GetPlayers()) do
+    CreateESP(player)
+end
+
+table.insert(playerEspConnections, Services.Players.PlayerAdded:Connect(function(player)
+    CreateESP(player)
+end))
+
+table.insert(playerEspConnections, Services.Players.PlayerRemoving:Connect(function(player)
+    RemoveESP(player)
+end))
 
 function Mega.Features.ESP.SetEnabled(state)
     States.ESP.Enabled = state
     if state then
-        table.insert(playerEspConnections, Services.RunService.RenderStepped:Connect(updateESP))
+        if not Mega.Objects.ESPRenderConnection then
+            Mega.Objects.ESPRenderConnection = Services.RunService.RenderStepped:Connect(function()
+                UpdateESP()
+                UpdateESPColors()
+            end)
+        end
     else
-        for _, conn in ipairs(playerEspConnections) do conn:Disconnect() end
-        table.clear(playerEspConnections)
-        espFolder:ClearAllChildren()
+        if Mega.Objects.ESPRenderConnection then
+            Mega.Objects.ESPRenderConnection:Disconnect()
+            Mega.Objects.ESPRenderConnection = nil
+        end
+        for player, esp in pairs(Mega.Objects.ESP) do
+            esp.box.Visible = false
+            esp.name.Visible = false
+            esp.distance.Visible = false
+            esp.healthBarBack.Visible = false
+            esp.healthBarFront.Visible = false
+            esp.tracer.Visible = false
+        end
     end
 end
 --#endregion
-
