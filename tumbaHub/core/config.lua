@@ -45,20 +45,15 @@ end
 function Mega.ConfigSystem.Save(name)
     if not writefile then return false end
     
+    if not isfolder("tumbaHub") then pcall(makefolder, "tumbaHub") end
+    if not isfolder("tumbaHub/configs") then pcall(makefolder, "tumbaHub/configs") end
+
     local dataToSave = {
         Settings = Mega.Settings,
         States = Mega.States,
-        -- We don't save stats, they are runtime only
-        -- We don't save language here, it has its own file
+        Language = Mega.Localization.CurrentLanguage
     }
     
-    -- We only want to save non-default keybinds
-    dataToSave.States.Keybinds = {}
-    for key, value in pairs(Mega.States.Keybinds) do
-        -- Assuming default keybinds are defined somewhere or we just save all
-        dataToSave.States.Keybinds[key] = value
-    end
-
     local sanitizedData = Mega.ConfigSystem.Sanitize(dataToSave)
     local success, json = pcall(HttpService.JSONEncode, HttpService, sanitizedData)
 
@@ -67,15 +62,18 @@ function Mega.ConfigSystem.Save(name)
         return false
     end
     
-    writefile("TumbaConfig_" .. name .. ".json", json)
+    pcall(writefile, "tumbaHub/configs/TumbaConfig_" .. name .. ".json", json)
     return true
 end
 
 function Mega.ConfigSystem.Load(name)
     if not readfile or not isfile then return false end
     
-    local fileName = "TumbaConfig_" .. name .. ".json"
-    if not isfile(fileName) then return false end
+    local fileName = "tumbaHub/configs/TumbaConfig_" .. name .. ".json"
+    if not isfile(fileName) then
+        fileName = "TumbaConfig_" .. name .. ".json" -- Fallback to root directory
+        if not isfile(fileName) then return false end
+    end
     
     local success, json = pcall(readfile, fileName)
     if not success or not json then return false end
@@ -98,11 +96,10 @@ function Mega.ConfigSystem.Load(name)
 
     if data.Settings then deepMerge(Mega.Settings, data.Settings) end
     if data.States then deepMerge(Mega.States, data.States) end
-    
-    -- After loading, tell the GUI to update itself
-    if Mega.Objects.GUI and Mega.Objects.RefreshGUI then
-        Mega.Objects.RefreshGUI()
+    if data.Language and Mega.Localization then
+        Mega.Localization.CurrentLanguage = data.Language
     end
+    
 
     return true
 end
@@ -111,12 +108,17 @@ function Mega.ConfigSystem.GetList()
     local list = {}
     if not listfiles then return list end
 
-    local success, files = pcall(listfiles, "")
+    local success, files = pcall(listfiles, "tumbaHub/configs")
+    if not success then 
+        success, files = pcall(listfiles, "") 
+    end
+    
     if not success then return list end
         
     for _, file in ipairs(files) do
-        if file:find("TumbaConfig_") and file:find(".json") then
-            local configName = file:match("TumbaConfig_(.+)%.json")
+        local filename = file:match("([^/\\]+)$") or file
+        if filename:find("TumbaConfig_") and filename:find("%.json$") then
+            local configName = filename:match("TumbaConfig_(.+)%.json")
             if configName then
                 table.insert(list, configName)
             end
@@ -125,4 +127,3 @@ function Mega.ConfigSystem.GetList()
     
     return list
 end
-
