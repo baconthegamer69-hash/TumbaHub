@@ -54,6 +54,7 @@ UI.CreateToggleWithSettings(TabFrame, "toggle_killaura", "Combat.Killaura.Enable
     Mega.States.Combat.Killaura.Enabled = state
     if Mega.Features.Killaura and Mega.Features.Killaura.SetEnabled then Mega.Features.Killaura.SetEnabled(state) end
 end, {
+    UI.CreateToggle(nil, "toggle_killaura_target_esp", "Combat.Killaura.TargetESP"),
     UI.CreateSlider(nil, "slider_killaura_range", "Combat.Killaura.Range", 5, 100),
     UI.CreateSlider(nil, "slider_killaura_delay", "Combat.Killaura.Delay", 0, 1000),
     UI.CreateKeybindButton(nil, "keybind_killaura", "Keybinds.Killaura")
