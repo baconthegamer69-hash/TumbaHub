@@ -37,6 +37,12 @@ TabFrame.CanvasSize = UDim2.new(0, 0, 0, ContentLayout.AbsoluteContentSize.Y + 2
 
 Mega.Objects.TabFrames[tabKey] = TabFrame
 
+local function notifyFeature(key, state)
+    if Mega.ShowNotification then
+        Mega.ShowNotification(Mega.GetText(key) .. ": " .. (state and Mega.GetText("notify_enabled") or Mega.GetText("notify_disabled")), 2)
+    end
+end
+
 --#region -- Main Farm
 UI.CreateSection(TabFrame, "section_farm_main")
 UI.CreateToggle(TabFrame, "toggle_autofarm", "Misc.AutoFarm")
@@ -47,6 +53,7 @@ UI.CreateToggleWithSettings(TabFrame, "toggle_beekeeper", "Beekeeper.Enabled", f
     if Mega.Features.Beekeeper then
         Mega.Features.Beekeeper.SetEnabled(state)
     end
+    notifyFeature("toggle_beekeeper", state)
 end, {
     UI.CreateToggle(nil, "toggle_bee_icons", "Beekeeper.ShowIcons", function() if Mega.Features.Beekeeper then Mega.Features.Beekeeper.UpdateVisuals() end end),
     UI.CreateToggle(nil, "toggle_bee_highlight", "Beekeeper.ShowHighlight", function() if Mega.Features.Beekeeper then Mega.Features.Beekeeper.UpdateVisuals() end end),
@@ -60,6 +67,7 @@ UI.CreateToggleWithSettings(TabFrame, "toggle_cletus", "Cletus.Enabled", functio
     if Mega.Features.Cletus then
         Mega.Features.Cletus.SetEnabled(state)
     end
+    notifyFeature("toggle_cletus", state)
 end, {
     UI.CreateToggle(nil, "toggle_cletus_harvest", "Cletus.AutoHarvest"),
     UI.CreateToggle(nil, "toggle_cletus_esp", "Cletus.ESP", function() if Mega.Features.Cletus then Mega.Features.Cletus.RecreateESP() end end),
@@ -79,6 +87,7 @@ UI.CreateToggleWithSettings(TabFrame, "toggle_eldertree", "Eldertree.Enabled", f
     if Mega.Features.Eldertree then
         Mega.Features.Eldertree.SetEnabled(state)
     end
+    notifyFeature("toggle_eldertree", state)
 end, {
     UI.CreateToggle(nil, "toggle_eldertree_autocollect", "Eldertree.AutoCollect", function(state)
         Mega.States.Eldertree.AutoCollect = state
@@ -102,6 +111,7 @@ end)
 UI.CreateToggleWithSettings(TabFrame, "toggle_star_collector", "StarCollector.Enabled", function(state)
     Mega.States.StarCollector.Enabled = state
     if Mega.Features.StarCollector then Mega.Features.StarCollector.SetEnabled(state) end
+    notifyFeature("toggle_star_collector", state)
 end, {
     UI.CreateToggle(nil, "toggle_star_collector_autocollect", "StarCollector.AutoCollect"),
     UI.CreateToggle(nil, "toggle_star_collector_esp", "StarCollector.ESP", function(state)
@@ -122,6 +132,7 @@ end)
 UI.CreateToggleWithSettings(TabFrame, "toggle_metal", "Metal.Enabled", function(state)
     Mega.States.Metal.Enabled = state
     if Mega.Features.Metal then Mega.Features.Metal.SetEnabled(state) end
+    notifyFeature("toggle_metal", state)
 end, {
     UI.CreateToggle(nil, "toggle_metal_esp", "Metal.ESP", function(state)
         Mega.States.Metal.ESP = state
@@ -134,7 +145,11 @@ end, {
 --#endregion
 
 --#region -- Taliah
-UI.CreateToggleWithSettings(TabFrame, "toggle_taliah", "Taliah.Enabled", nil, {
+UI.CreateToggleWithSettings(TabFrame, "toggle_taliah", "Taliah.Enabled", function(state)
+    Mega.States.Taliah.Enabled = state
+    if Mega.Features.Taliah and Mega.Features.Taliah.SetEnabled then Mega.Features.Taliah.SetEnabled(state) end
+    notifyFeature("toggle_taliah", state)
+end, {
     UI.CreateToggle(nil, "toggle_taliah_esp", "Taliah.ESP"),
     UI.CreateToggle(nil, "toggle_taliah_collect", "Taliah.AutoCollect"),
     UI.CreateToggle(nil, "toggle_taliah_collect_legit", "Taliah.AutoCollectLegit"),
@@ -161,6 +176,7 @@ end)
 UI.CreateToggleWithSettings(TabFrame, "toggle_noelle", "Noelle.Enabled", function(state)
     Mega.States.Noelle.Enabled = state
     if Mega.Features.Noelle and Mega.Features.Noelle.SetEnabled then Mega.Features.Noelle.SetEnabled(state) end
+    notifyFeature("toggle_noelle", state)
 end, {
     UI.CreateToggle(nil, "toggle_noelle_save_binds", "Noelle.SaveBinds"),
     noelleContainer
@@ -182,6 +198,7 @@ end)
 UI.CreateToggleWithSettings(TabFrame, "toggle_lani", "Misc.Lani.Enabled", function(state)
     Mega.States.Misc.Lani.Enabled = state
     if Mega.Features.Lani and Mega.Features.Lani.RefreshPlayers then Mega.Features.Lani.RefreshPlayers() end
+    notifyFeature("toggle_lani", state)
 end, {
     UI.CreateKeybindButton(nil, "keybind_lani", "Misc.Lani.Keybind", function(key) Mega.States.Misc.Lani.Keybind = key end),
     laniContainer
