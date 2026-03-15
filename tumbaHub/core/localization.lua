@@ -304,15 +304,23 @@ end
 
 function Mega.SaveLanguage(lang)
     if writefile then
-        writefile("TumbaLanguage.txt", lang)
+        if not isfolder("tumbaHub") then pcall(makefolder, "tumbaHub") end
+        if not isfolder("tumbaHub/configs") then pcall(makefolder, "tumbaHub/configs") end
+        pcall(writefile, "tumbaHub/configs/Language.txt", lang)
     end
 end
 
 function Mega.LoadLanguage()
-    if readfile and isfile and isfile("TumbaLanguage.txt") then
-        local success, lang = pcall(readfile, "TumbaLanguage.txt")
-        if success and lang then
-            return lang
+    if readfile and isfile then
+        if isfile("tumbaHub/configs/Language.txt") then
+            local success, lang = pcall(readfile, "tumbaHub/configs/Language.txt")
+            if success and lang then return lang end
+        elseif isfile("TumbaLanguage.txt") then
+            local success, lang = pcall(readfile, "TumbaLanguage.txt")
+            if success and lang then 
+                Mega.SaveLanguage(lang) -- Переносим в новую папку
+                return lang 
+            end
         end
     end
     return "en" -- Default to English if loading fails
@@ -322,5 +330,5 @@ end
 Mega.Localization.CurrentLanguage = Mega.LoadLanguage()
 
 function Mega.HasSavedLanguage()
-    return (isfile and isfile("TumbaLanguage.txt"))
+    return (isfile and (isfile("tumbaHub/configs/Language.txt") or isfile("TumbaLanguage.txt")))
 end
