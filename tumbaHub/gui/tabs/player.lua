@@ -50,8 +50,16 @@ UI.CreateToggleWithSettings(TabFrame, "toggle_antiknockback", "Player.AntiKnockb
     UI.CreateSlider(nil, "slider_knockback_strength", "Player.KnockbackStrength", 0, 100)
 })
 
-UI.CreateToggleWithSettings(TabFrame, "toggle_spider", "Player.Spider", nil, {
-     UI.CreateSlider(nil, "slider_spider_speed", "Player.SpiderSpeed", 1, 50)
+task.spawn(function()
+    pcall(function() Mega.LoadModule("features/spider.lua") end)
+end)
+
+UI.CreateToggleWithSettings(TabFrame, "toggle_spider", "Player.Spider", function(state)
+    Mega.States.Player.Spider = state
+    if Mega.Features.Spider and Mega.Features.Spider.SetEnabled then Mega.Features.Spider.SetEnabled(state) end
+end, {
+    UI.CreateDropdown(nil, "dropdown_spider_mode", "Player.SpiderMode", {"Velocity", "CFrame"}),
+    UI.CreateSlider(nil, "slider_spider_speed", "Player.SpiderSpeed", 1, 100)
 })
 
 UI.CreateToggleWithSettings(TabFrame, "toggle_scaffold", "Player.Scaffold.Enabled", nil, {
@@ -97,4 +105,3 @@ local function onRenderStep()
 end
 
 Mega.Services.RunService.RenderStepped:Connect(onRenderStep)
-
