@@ -245,6 +245,18 @@ end
 task.wait(0.1)
 SelectTab("tab_home", TabButtons["tab_home"])
 
+-- === ФОНОВАЯ ПРОГРУЗКА ВСЕХ ВКЛАДОК ===
+-- Прогружаем модули с небольшим КД, чтобы функции из конфига активировались автоматически
+task.spawn(function()
+    for _, tabKey in ipairs(TabKeys) do
+        local modulePath = "gui/tabs/" .. tabKey:gsub("^tab_", "") .. ".lua"
+        if not Mega.LoadedModules[modulePath] then
+            pcall(function() Mega.LoadModule(modulePath) end)
+            task.wait(0.15) -- КД 150мс между прогрузкой вкладок, чтобы избежать фризов игры
+        end
+    end
+end)
+
 -- Keybinds Logic
 Mega.Objects.Connections.MainWindowKeybinds = Services.UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if gameProcessed then return end
