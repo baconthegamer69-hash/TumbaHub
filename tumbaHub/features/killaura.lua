@@ -118,8 +118,8 @@ function Mega.Features.Killaura.SetEnabled(state)
         killauraActive = true
         task.spawn(function()
             while States.Combat.Killaura.Enabled do
-                if not Mega.Objects.GUI or not Mega.Objects.GUI.Parent then break end
-                
+                if Mega.Unloaded then break end
+
                 if SwordHitRemote then
                     local char = LocalPlayer.Character
                     local hrp = char and char:FindFirstChild("HumanoidRootPart")
