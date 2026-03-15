@@ -162,7 +162,7 @@ end
 
 local function UpdateESPColors()
     for player, esp in pairs(Mega.Objects.ESP) do
-        if player and player.Character then
+        if player and player.Parent and player.Character then
             local isTeam = player.Team and (player.Team == Services.LocalPlayer.Team)
             local color = States.ESP.EnemyColor
             
@@ -192,7 +192,7 @@ local function UpdateESP()
     for player, esp in pairs(Mega.Objects.ESP) do
         local isVisible = false
         
-        if player and player.Character and localRoot then
+        if player and player.Parent and player.Character and localRoot then
             local rootPart = player.Character:FindFirstChild("HumanoidRootPart")
             local head = player.Character:FindFirstChild("Head")
             local humanoid = player.Character:FindFirstChild("Humanoid")
@@ -205,6 +205,7 @@ local function UpdateESP()
                     local distance = (localRoot.Position - rootPart.Position).Magnitude
 
                     if onScreen and distance <= States.ESP.MaxDistance then
+                        if distance < 0.1 then distance = 0.1 end
                         isVisible = true
                         local scale = 1000 / distance
                         local width = scale * 2
@@ -235,7 +236,10 @@ local function UpdateESP()
                         end
 
                         if States.ESP.Health then
-                            local healthPercent = math.clamp(humanoid.Health / humanoid.MaxHealth, 0, 1)
+                            local maxHealth = humanoid.MaxHealth
+                            if maxHealth <= 0 then maxHealth = 100 end
+                            local healthPercent = math.clamp(humanoid.Health / maxHealth, 0, 1)
+                            if healthPercent ~= healthPercent then healthPercent = 0 end
                             local barHeight = height * healthPercent
                             local barColor = Color3.fromHSV(0.33 * healthPercent, 1, 1)
 
