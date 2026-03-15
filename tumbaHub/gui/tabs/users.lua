@@ -24,20 +24,20 @@ ContentLayout.Padding = UDim.new(0, 8)
 Mega.Objects.TabFrames[tabKey] = TabFrame
 
 task.spawn(function()
-    pcall(function() Mega.LoadModule("features/follow.lua") end)
+    pcall(function() Mega.LoadModule("features/spectate_players.lua") end)
 end)
 
 --#region -- Player List
 UI.CreateSection(TabFrame, "section_player_list")
 
-UI.CreateButton(TabFrame, "button_stop_follow", function()
-    if Mega.Features.Follow and Mega.Features.Follow.StopFollow then
-        Mega.Features.Follow.StopFollow()
+UI.CreateButton(TabFrame, "button_stop_spectate", function()
+    if Mega.Features.SpectatePlayers and Mega.Features.SpectatePlayers.StopSpectate then
+        Mega.Features.SpectatePlayers.StopSpectate()
     else
-        Mega.States.Player.FollowTarget = nil
+        Mega.States.Player.SpectateTarget = nil
         Services.Workspace.CurrentCamera.CameraType = Enum.CameraType.Custom
         if Mega.ShowNotification then
-            Mega.ShowNotification(Mega.GetText("notify_follow_stop"))
+            Mega.ShowNotification(Mega.GetText("notify_spectate_stop"))
         end
     end
 end)
@@ -141,11 +141,11 @@ DistanceLabel.Size = UDim2.new(0.25, 0, 1, 0)
 DistanceLabel.Text = Mega.GetText("playerlist_dist")
 DistanceLabel.Parent = PlayerItemTemplate
 
-local function StartFollow(player)
+local function StartSpectate(player)
     if player == Services.LocalPlayer then return end
-    Mega.States.Player.FollowTarget = player
+    Mega.States.Player.SpectateTarget = player
     if Mega.ShowNotification then
-        Mega.ShowNotification(Mega.GetText("notify_follow_start", player.Name))
+        Mega.ShowNotification(Mega.GetText("notify_spectate_start", player.Name))
     end
 end
 
@@ -176,7 +176,7 @@ local function updatePlayerList()
 
                 local p = player 
                 item.MouseButton1Click:Connect(function()
-                    StartFollow(p)
+                    StartSpectate(p)
                 end)
             end
 
@@ -189,7 +189,7 @@ local function updatePlayerList()
             local hpLabel = item:FindFirstChild("HP")
             local distLabel = item:FindFirstChild("Distance")
 
-            if Mega.States.Player.FollowTarget == player then
+            if Mega.States.Player.SpectateTarget == player then
                 item.BackgroundColor3 = Mega.Settings.Menu.AccentColor
             else
                 item.BackgroundColor3 = Color3.fromRGB(30, 35, 50)
