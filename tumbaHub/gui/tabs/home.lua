@@ -43,9 +43,21 @@ UpdateText.Parent = TabFrame
 --#region -- Status Section
 UI.CreateSection(TabFrame, "section_status")
 
-UI.CreateToggle(TabFrame, "toggle_autosave", "System.AutoSave")
-UI.CreateToggle(TabFrame, "toggle_perf_mode", "System.PerformanceMode")
-UI.CreateToggle(TabFrame, "toggle_status_indicator", "System.ShowStatusIndicator")
+if not Mega.States.System then Mega.States.System = {} end
+if Mega.States.System.AutoSave == nil then Mega.States.System.AutoSave = Mega.Settings.System.AutoSave end
+if Mega.States.System.PerformanceMode == nil then Mega.States.System.PerformanceMode = Mega.Settings.System.PerformanceMode end
+if Mega.States.System.ShowStatusIndicator == nil then Mega.States.System.ShowStatusIndicator = Mega.Settings.System.ShowStatusIndicator end
+
+UI.CreateToggle(TabFrame, "toggle_autosave", "System.AutoSave", function(state)
+    Mega.Settings.System.AutoSave = state
+end)
+UI.CreateToggle(TabFrame, "toggle_perf_mode", "System.PerformanceMode", function(state)
+    Mega.Settings.System.PerformanceMode = state
+end)
+UI.CreateToggle(TabFrame, "toggle_status_indicator", "System.ShowStatusIndicator", function(state)
+    Mega.Settings.System.ShowStatusIndicator = state
+    if Mega.UpdateStatus then Mega.UpdateStatus() end
+end)
 --#endregion
 
 --#region -- Quick Access
@@ -92,4 +104,3 @@ Mega.Services.RunService.Stepped:Connect(function()
     end
 end)
 --#endregion
-
