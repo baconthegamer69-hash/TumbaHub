@@ -84,6 +84,7 @@ Mega.Localization = {
         ["toggle_killaura"] = { ru = "Killaura", en = "Killaura", es = "Killaura", pt = "Killaura", ko = "킬라우라", ja = "キルオーラ", uk = "Killaura" },
         ["slider_killaura_range"] = { ru = "Дистанция", en = "Range", es = "Rango", pt = "Alcance", ko = "범위", ja = "範囲", uk = "Дистанція" },
         ["slider_killaura_delay"] = { ru = "Задержка (мс)", en = "Delay (ms)", es = "Retraso (ms)", pt = "Atraso (ms)", ko = "지연 (ms)", ja = "遅延 (ms)", uk = "Затримка (мс)" },
+        ["toggle_killaura_target_esp"] = { ru = "Показывать цель", en = "Show Target", es = "Mostrar Objetivo", pt = "Mostrar Alvo", ko = "대상 표시", ja = "ターゲットを表示", uk = "Показувати ціль" },
         ["tab_home"] = { ru = "🏠 ГЛАВНАЯ", en = "🏠 HOME", es = "🏠 INICIO", pt = "🏠 INÍCIO", ko = "🏠 홈", ja = "🏠 ホーム", uk = "🏠 ГОЛОВНА" },
         ["tab_updates"] = { ru = "📢 ОБНОВЛЕНИЯ", en = "📢 UPDATES", es = "📢 ACTUALIZACIONES", pt = "📢 ATUALIZAÇÕES", ko = "📢 업데이트", ja = "📢 更新", uk = "📢 ОНОВЛЕННЯ" },
         ["tab_esp"] = { ru = "👁️ ESP", en = "👁️ ESP", es = "👁️ ESP", pt = "👁️ ESP", ko = "👁️ ESP", ja = "👁️ ESP", uk = "👁️ ESP" },
