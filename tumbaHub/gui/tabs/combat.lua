@@ -63,3 +63,23 @@ end, {
     UI.CreateKeybindButton(nil, "keybind_killaura", "Keybinds.Killaura")
 })
 --#endregion
+
+--#region -- Bed Nuke
+UI.CreateSection(TabFrame, "section_combat_bednuke")
+
+task.spawn(function()
+    pcall(function() Mega.LoadModule("features/bed_nuke.lua") end)
+end)
+
+UI.CreateToggleWithSettings(TabFrame, "toggle_bednuke", "Combat.BedNuke.Enabled", function(state)
+    Mega.States.Combat.BedNuke.Enabled = state
+    if Mega.Features.BedNuke and Mega.Features.BedNuke.SetEnabled then Mega.Features.BedNuke.SetEnabled(state) end
+    if Mega.ShowNotification then
+        local title = Mega.GetText("toggle_bednuke") or "Bed Nuke"
+        Mega.ShowNotification(title .. ": " .. (state and Mega.GetText("notify_enabled") or Mega.GetText("notify_disabled")), 2)
+    end
+end, {
+    UI.CreateSlider(nil, "slider_bednuke_range", "Combat.BedNuke.Range", 5, 50),
+    UI.CreateSlider(nil, "slider_bednuke_packets", "Combat.BedNuke.PacketsPerTick", 1, 10)
+})
+--#endregion
