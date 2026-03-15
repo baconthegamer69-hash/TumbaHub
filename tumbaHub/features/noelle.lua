@@ -208,7 +208,7 @@ local function InitializeNoelleUI()
         end)
 
         for _, p in ipairs(Services.Players:GetPlayers()) do
-            if p ~= LocalPlayer then
+            if p ~= LocalPlayer and p.Team == LocalPlayer.Team then
                 local btn = Instance.new("TextButton")
                 btn.Size = UDim2.new(0.95, 0, 0, 35)
                 
@@ -235,7 +235,9 @@ local function InitializeNoelleUI()
                 
                 local teamConn
                 teamConn = p:GetPropertyChangedSignal("Team"):Connect(function()
-                    if p.Team and p.Team.TeamColor then
+                    if p.Team ~= LocalPlayer.Team then
+                        RefreshPlayerList()
+                    elseif p.Team and p.Team.TeamColor then
                         btn.TextColor3 = p.Team.TeamColor.Color
                     else
                         btn.TextColor3 = Color3.new(1,1,1)
@@ -255,6 +257,10 @@ local function InitializeNoelleUI()
     end)
 
     connections.NoellePlayerRefresh2 = Services.Players.PlayerRemoving:Connect(function()
+        if States.Noelle.Enabled and PlayerManageContainer.Visible then RefreshPlayerList() end
+    end)
+
+    connections.NoelleLocalTeamRefresh = LocalPlayer:GetPropertyChangedSignal("Team"):Connect(function()
         if States.Noelle.Enabled and PlayerManageContainer.Visible then RefreshPlayerList() end
     end)
 
