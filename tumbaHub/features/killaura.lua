@@ -184,6 +184,7 @@ function Mega.Features.Killaura.SetEnabled(state)
                         arrow.Adornee = tHrp
                         circle.Adornee = tHrp
                         arrow.StudsOffset = Vector3.new(0, 4 + math.sin(tick() * 6) * 0.5, 0)
+                        circle.CFrame = CFrame.new(0, -2.5, 0) * CFrame.Angles(math.rad(90), tick() * 3, 0)
                         circle.CFrame = CFrame.new(0, -2.5, 0) * CFrame.Angles(math.rad(90), 0, 0)
                     else
                         if arrow then arrow.Adornee = nil end
