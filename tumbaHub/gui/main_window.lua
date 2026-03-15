@@ -8,13 +8,26 @@ local States = Mega.States
 local GetText = Mega.GetText
 
 function Mega.ReloadGUI()
+    -- 1. Очищаем все старые подключения и объекты перед рестартом
+    if Mega.Objects and Mega.Objects.Connections then
+        for _, conn in pairs(Mega.Objects.Connections) do
+            pcall(function() conn:Disconnect() end)
+        end
+    end
+
     if Mega.Objects.GUI then
         local wasEnabled = Mega.Objects.GUI.Enabled
         Mega.Objects.GUI:Destroy()
         Mega.Objects.GUI = nil
         
+        if Services.CoreGui:FindFirstChild("TumbaStatusIndicator") then
+            Services.CoreGui.TumbaStatusIndicator:Destroy()
+        end
+
         -- Очищаем кэш вкладок, чтобы они перерисовались с новым языком
         Mega.Objects.TabFrames = {}
+        Mega.Objects.Connections = {}
+        Mega.Objects.Toggles = {}
         
         for k in pairs(Mega.LoadedModules) do
             if k:find("^gui/tabs/") then
@@ -68,7 +81,7 @@ Shadow.Position = UDim2.new(0, -20, 0, -20)
 Shadow.BackgroundTransparency = 1
 Shadow.Image = "rbxassetid://1316045217"
 Shadow.ImageColor3 = Settings.Menu.AccentColor
-Shadow.ImageTransparency = 1
+Shadow.ImageTransparency = 0.7
 Shadow.ScaleType = Enum.ScaleType.Slice
 Shadow.SliceCenter = Rect.new(10, 10, 118, 118)
 Shadow.ZIndex = 0
@@ -233,7 +246,7 @@ task.wait(0.1)
 SelectTab("tab_home", TabButtons["tab_home"])
 
 -- Keybinds Logic
-Services.UserInputService.InputBegan:Connect(function(input, gameProcessed)
+Mega.Objects.Connections.MainWindowKeybinds = Services.UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if gameProcessed then return end
     local key = input.KeyCode.Name
     
@@ -242,19 +255,33 @@ Services.UserInputService.InputBegan:Connect(function(input, gameProcessed)
     end
     
     if key == States.Keybinds.Killaura and key ~= "None" then
+        local newState = not States.Combat.Killaura.Enabled
         if Mega.Objects.Toggles and Mega.Objects.Toggles["toggle_killaura"] then
-            Mega.Objects.Toggles["toggle_killaura"](not States.Combat.Killaura.Enabled)
+            Mega.Objects.Toggles["toggle_killaura"](newState)
+        else
+            States.Combat.Killaura.Enabled = newState
+            if Mega.Features.Killaura and Mega.Features.Killaura.SetEnabled then Mega.Features.Killaura.SetEnabled(newState) end
+            if Mega.ShowNotification then Mega.ShowNotification((GetText("toggle_killaura") or "Killaura") .. ": " .. (newState and GetText("notify_enabled") or GetText("notify_disabled")), 2) end
         end
     end
     
     if key == States.Keybinds.Scaffold and key ~= "None" then
+        local newState = not States.Player.Scaffold.Enabled
         if Mega.Objects.Toggles and Mega.Objects.Toggles["toggle_scaffold"] then
-            Mega.Objects.Toggles["toggle_scaffold"](not States.Player.Scaffold.Enabled)
+            Mega.Objects.Toggles["toggle_scaffold"](newState)
+        else
+            States.Player.Scaffold.Enabled = newState
+            if Mega.Features.Scaffold and Mega.Features.Scaffold.SetEnabled then Mega.Features.Scaffold.SetEnabled(newState) end
+            if Mega.ShowNotification then Mega.ShowNotification((GetText("toggle_scaffold") or "Scaffold") .. ": " .. (newState and GetText("notify_enabled") or GetText("notify_disabled")), 2) end
         end
     end
 end)
 
 -- Status Indicator GUI
+if Services.CoreGui:FindFirstChild("TumbaStatusIndicator") then
+    Services.CoreGui.TumbaStatusIndicator:Destroy()
+end
+
 local StatusGUI = Instance.new("ScreenGui", Services.CoreGui)
 StatusGUI.Name = "TumbaStatusIndicator"
 StatusGUI.ResetOnSpawn = false
@@ -264,7 +291,7 @@ local StatusIndicator = Instance.new("Frame", StatusGUI)
 StatusIndicator.Name = "StatusList"
 StatusIndicator.Size = UDim2.new(0, 200, 1, 0)
 StatusIndicator.Position = UDim2.new(1, -210, 0, 10)
-StatusIndicator.BackgroundTransparency = 0.7
+StatusIndicator.BackgroundTransparency = 1
 local StatusLayout = Instance.new("UIListLayout", StatusIndicator)
 StatusLayout.HorizontalAlignment = Enum.HorizontalAlignment.Right
 StatusLayout.SortOrder = Enum.SortOrder.LayoutOrder
@@ -336,7 +363,7 @@ function Mega.UpdateStatus()
 end
 
 -- Auto-update status
-Services.RunService.RenderStepped:Connect(function()
+Mega.Objects.Connections.MainWindowStatusUpdate = Services.RunService.RenderStepped:Connect(function()
     if TumbaGUI.Enabled then
         Mega.UpdateStatus()
     end
