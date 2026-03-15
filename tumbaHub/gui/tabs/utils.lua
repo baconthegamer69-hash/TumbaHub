@@ -49,7 +49,6 @@ UI.CreateToggle(TabFrame, "toggle_fames_mom", "Misc.FamesMom")
 --#endregion
 
 --#region -- Auto-Loot
-UI.CreateSection(TabFrame, "toggle_chest_steal")
 
 task.spawn(function()
     pcall(function() Mega.LoadModule("features/chest_steal.lua") end)
@@ -64,7 +63,6 @@ end, {
 --#endregion
 
 --#region -- Auto-Deposit
-UI.CreateSection(TabFrame, "toggle_auto_deposit")
 
 task.spawn(function()
     pcall(function() Mega.LoadModule("features/auto_deposit.lua") end)
