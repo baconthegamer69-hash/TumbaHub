@@ -7,8 +7,28 @@ local Settings = Mega.Settings
 local States = Mega.States
 local GetText = Mega.GetText
 
--- Forward declaration for callbacks
-local ReloadGUI
+function Mega.ReloadGUI()
+    if Mega.Objects.GUI then
+        local wasEnabled = Mega.Objects.GUI.Enabled
+        Mega.Objects.GUI:Destroy()
+        Mega.Objects.GUI = nil
+        
+        -- Очищаем кэш вкладок, чтобы они перерисовались с новым языком
+        Mega.Objects.TabFrames = {}
+        
+        for k in pairs(Mega.LoadedModules) do
+            if k:find("^gui/tabs/") then
+                Mega.LoadedModules[k] = nil
+            end
+        end
+        
+        Mega.InitializeMainGUI()
+        
+        if Mega.Objects.GUI then
+            Mega.Objects.GUI.Enabled = wasEnabled
+        end
+    end
+end
 
 function Mega.InitializeMainGUI()
 
