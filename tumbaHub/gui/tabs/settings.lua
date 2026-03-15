@@ -149,6 +149,8 @@ InputBox.Text = ""
 InputBox.PlaceholderText = Mega.GetText("textbox_config_name")
 InputBox.TextColor3 = Mega.Settings.Menu.TextColor
 InputBox.TextSize = 11
+InputBox.TextScaled = true
+InputBox.TextWrapped = true
 InputBox.Font = Enum.Font.Gotham
 Instance.new("UICorner", InputBox).CornerRadius = UDim.new(0, 6)
 
