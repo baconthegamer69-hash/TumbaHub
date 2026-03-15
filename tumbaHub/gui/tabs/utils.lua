@@ -65,7 +65,15 @@ end, {
 
 --#region -- Auto-Deposit
 UI.CreateSection(TabFrame, "toggle_auto_deposit")
-UI.CreateToggleWithSettings(TabFrame, "toggle_auto_deposit", "Misc.AutoDeposit.Enabled", nil, {
+
+task.spawn(function()
+    pcall(function() Mega.LoadModule("features/auto_deposit.lua") end)
+end)
+
+UI.CreateToggleWithSettings(TabFrame, "toggle_auto_deposit", "Misc.AutoDeposit.Enabled", function(state)
+    Mega.States.Misc.AutoDeposit.Enabled = state
+    if Mega.Features.AutoDeposit and Mega.Features.AutoDeposit.SetEnabled then Mega.Features.AutoDeposit.SetEnabled(state) end
+end, {
     UI.CreateSlider(nil, "slider_auto_deposit_range", "Misc.AutoDeposit.Range", 5, 50),
     UI.CreateSection(nil, "section_deposit_resources"),
     UI.CreateToggle(nil, "toggle_deposit_iron", "Misc.AutoDeposit.Resources.iron"),
