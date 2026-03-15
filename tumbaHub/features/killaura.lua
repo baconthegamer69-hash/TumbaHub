@@ -16,7 +16,9 @@ local States = Mega.States
 
 if not States.Combat then States.Combat = {} end
 if not States.Combat.Killaura then
-    States.Combat.Killaura = { Enabled = false, Range = 25, Delay = 0 }
+    States.Combat.Killaura = { Enabled = false, Range = 25, Delay = 0, TargetESP = true }
+elseif States.Combat.Killaura.TargetESP == nil then
+    States.Combat.Killaura.TargetESP = true
 end
 
 if not Mega.Objects.KillauraConnections then Mega.Objects.KillauraConnections = {} end
@@ -59,25 +61,73 @@ end
 
 local vec3 = (vector and vector.create) or Vector3.new
 
+local targetMarkerArrow
+local targetMarkerCircle
+
+local function GetTargetVisuals()
+    if not targetMarkerArrow then
+        targetMarkerArrow = Instance.new("BillboardGui")
+        targetMarkerArrow.Name = "KillauraArrow"
+        targetMarkerArrow.Size = UDim2.new(0, 50, 0, 50)
+        targetMarkerArrow.StudsOffset = Vector3.new(0, 4, 0)
+        targetMarkerArrow.AlwaysOnTop = true
+        
+        local arrowText = Instance.new("TextLabel", targetMarkerArrow)
+        arrowText.Size = UDim2.new(1, 0, 1, 0)
+        arrowText.BackgroundTransparency = 1
+        arrowText.Text = "▼"
+        arrowText.TextColor3 = Color3.fromRGB(255, 50, 50)
+        arrowText.TextScaled = true
+        arrowText.TextStrokeTransparency = 0
+        arrowText.Font = Enum.Font.GothamBlack
+    end
+    
+    if not targetMarkerCircle then
+        targetMarkerCircle = Instance.new("CylinderHandleAdornment")
+        targetMarkerCircle.Name = "KillauraCircle"
+        targetMarkerCircle.Height = 0.05
+        targetMarkerCircle.Radius = 3
+        targetMarkerCircle.InnerRadius = 2.7
+        targetMarkerCircle.Color3 = Color3.fromRGB(255, 50, 50)
+        targetMarkerCircle.Transparency = 0.3
+        targetMarkerCircle.AlwaysOnTop = true
+        targetMarkerCircle.ZIndex = 1
+        targetMarkerCircle.CFrame = CFrame.new(0, -2.5, 0) * CFrame.Angles(math.rad(90), 0, 0)
+    end
+    
+    if Services.CoreGui then
+        local container = Services.CoreGui:FindFirstChild("TumbaESP_Container") or Services.CoreGui
+        if targetMarkerArrow.Parent ~= container then targetMarkerArrow.Parent = container end
+        if targetMarkerCircle.Parent ~= container then targetMarkerCircle.Parent = container end
+    end
+    
+    return targetMarkerArrow, targetMarkerCircle
+end
+
 local killauraActive = false
 
 function Mega.Features.Killaura.SetEnabled(state)
     States.Combat.Killaura.Enabled = state
     
+    if not state then
+        if targetMarkerArrow then targetMarkerArrow.Adornee = nil end
+        if targetMarkerCircle then targetMarkerCircle.Adornee = nil end
+    end
+    
     if state and not killauraActive then
         killauraActive = true
         task.spawn(function()
             while States.Combat.Killaura.Enabled do
-                if not Mega.Objects.GUI or not Mega.Objects.GUI.Parent then 
-                    killauraActive = false
-                    break 
-                end
+                if not Mega.Objects.GUI or not Mega.Objects.GUI.Parent then break end
                 
                 if SwordHitRemote then
                     local char = LocalPlayer.Character
                     local hrp = char and char:FindFirstChild("HumanoidRootPart")
                     local weapon = getWeapon()
                     
+                    local closestTarget = nil
+                    local closestDist = States.Combat.Killaura.Range
+
                     if hrp and weapon then
                         for _, obj in pairs(Services.Workspace:GetChildren()) do
                             if obj ~= char and (obj:FindFirstChild("Humanoid") or obj.Name:find("Dummy")) then
@@ -94,6 +144,11 @@ function Mega.Features.Killaura.SetEnabled(state)
                                     if isEnemy then
                                         local dist = (hrp.Position - tHrp.Position).Magnitude
                                         if dist < States.Combat.Killaura.Range and dist > 0 then
+                                            if dist < closestDist then
+                                                closestDist = dist
+                                                closestTarget = obj
+                                            end
+
                                             local direction = (tHrp.Position - hrp.Position).Unit
                                             local spoofedSelfPos = hrp.Position
                                             if dist > 14 then
@@ -121,6 +176,18 @@ function Mega.Features.Killaura.SetEnabled(state)
                                 end
                             end
                         end
+                    end
+                    
+                    local arrow, circle = GetTargetVisuals()
+                    if closestTarget and States.Combat.Killaura.TargetESP then
+                        local tHrp = closestTarget:FindFirstChild("HumanoidRootPart") or closestTarget.PrimaryPart
+                        arrow.Adornee = tHrp
+                        circle.Adornee = tHrp
+                        arrow.StudsOffset = Vector3.new(0, 4 + math.sin(tick() * 6) * 0.5, 0)
+                        circle.CFrame = CFrame.new(0, -2.5, 0) * CFrame.Angles(math.rad(90), tick() * 3, 0)
+                    else
+                        if arrow then arrow.Adornee = nil end
+                        if circle then circle.Adornee = nil end
                     end
                 end
                 
