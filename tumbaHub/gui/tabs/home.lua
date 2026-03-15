@@ -94,7 +94,7 @@ StatsLabel.TextXAlignment = Enum.TextXAlignment.Left
 StatsLabel.TextYAlignment = Enum.TextYAlignment.Top
 StatsLabel.Parent = TabFrame
 
-Mega.Services.RunService.Stepped:Connect(function()
+Mega.Objects.Connections.HomeStatsUpdate = Mega.Services.RunService.Stepped:Connect(function()
     if TabFrame.Visible then
         StatsLabel.Text = GetText("stats_label", 
             Mega.Database.Stats.Kills, 
