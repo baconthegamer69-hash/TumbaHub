@@ -30,37 +30,41 @@ Mega.States.Settings.Menu.Transparency = math.floor((Mega.Settings.Menu.Transpar
 
 if not Mega.States.Temp then Mega.States.Temp = {} end
 
-local langOptionsKeys = {
-    "language_english", "language_russian", "language_ukrainian",
-    "language_spanish", "language_portuguese", "language_korean", "language_japanese"
+local langNames = {
+    "English", "Русский", "Українська", 
+    "Español", "Português", "한국어", "日本語"
 }
 
-local currentLangMap = {
-    en = "language_english", ru = "language_russian", uk = "language_ukrainian",
-    es = "language_spanish", pt = "language_portuguese", ko = "language_korean", ja = "language_japanese"
+local langMapReverse = {
+    ["English"] = "en", ["Русский"] = "ru", ["Українська"] = "uk",
+    ["Español"] = "es", ["Português"] = "pt", ["한국어"] = "ko", ["日本語"] = "ja"
 }
-Mega.States.Localization.CurrentLanguage = currentLangMap[Mega.Localization.CurrentLanguage] or "language_english"
+
+local currentName = "English"
+for k, v in pairs(langMapReverse) do
+    if v == Mega.Localization.CurrentLanguage then
+        currentName = k
+        break
+    end
+end
+Mega.States.Localization.CurrentLanguage = currentName
 
 --#region -- Appearance
 UI.CreateSection(TabFrame, "section_settings_appearance")
 
-UI.CreateDropdown(TabFrame, "dropdown_language", "Localization.CurrentLanguage", langOptionsKeys, function(val)
-    local reverseMap = {
-        language_english = "en", language_russian = "ru", language_ukrainian = "uk",
-        language_spanish = "es", language_portuguese = "pt", language_korean = "ko", language_japanese = "ja"
-    }
-    local lang = reverseMap[val] or "en"
+UI.CreateDropdown(TabFrame, "dropdown_language", "Localization.CurrentLanguage", langNames, function(val)
+    local lang = langMapReverse[val] or "en"
     
     if lang == Mega.Localization.CurrentLanguage then return end -- Избегаем лишней перезагрузки
     
     Mega.Localization.CurrentLanguage = lang
     Mega.SaveLanguage(lang)
-    Mega.ShowNotification(Mega.GetText("notify_language_changed", Mega.GetText(val)), 3)
+    Mega.ShowNotification(Mega.GetText("notify_language_changed", val), 3)
     
     if Mega.ReloadGUI then
         task.spawn(function() task.wait(0.2); Mega.ReloadGUI() end)
     end
-end, true)
+end)
 
 UI.CreateSlider(TabFrame, "slider_menu_transparency", "Settings.Menu.Transparency", 0, 100, function(v) 
     local trans = v / 100
