@@ -36,14 +36,16 @@ if not Mega.States.Temp then Mega.States.Temp = {} end
 UI.CreateSection(TabFrame, "section_settings_appearance")
 
 UI.CreateDropdown(TabFrame, "dropdown_language", "Localization.CurrentLanguage", {
-    "language_english", "language_russian", "language_spanish", "language_portuguese", "language_korean", "language_japanese", "language_ukrainian"
+    "language_english", "language_russian", "language_ukrainian", "language_spanish", "language_portuguese", "language_korean", "language_japanese"
 }, function(val)
     local langMap = {
-        language_english = "en", language_russian = "ru", language_spanish = "es",
-        language_portuguese = "pt", language_korean = "ko", language_japanese = "ja",
-        language_ukrainian = "uk"
+        language_english = "en", language_russian = "ru", language_ukrainian = "uk",
+        language_spanish = "es", language_portuguese = "pt", language_korean = "ko", language_japanese = "ja"
     }
     local lang = langMap[val] or "en"
+    
+    if lang == Mega.Localization.CurrentLanguage then return end -- Избегаем лишней перезагрузки
+    
     Mega.Localization.CurrentLanguage = lang
     Mega.SaveLanguage(lang)
     Mega.ShowNotification(Mega.GetText("notify_language_changed", Mega.GetText(val)), 3)
