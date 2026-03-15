@@ -30,41 +30,73 @@ Mega.States.Settings.Menu.Transparency = math.floor((Mega.Settings.Menu.Transpar
 
 if not Mega.States.Temp then Mega.States.Temp = {} end
 
-local langNames = {
-    "English", "Русский", "Українська", 
-    "Español", "Português", "한국어", "日本語"
+local langKeys = {
+    "language_english", "language_russian", "language_ukrainian",
+    "language_spanish", "language_portuguese", "language_korean", "language_japanese"
 }
 
 local langMapReverse = {
-    ["English"] = "en", ["Русский"] = "ru", ["Українська"] = "uk",
-    ["Español"] = "es", ["Português"] = "pt", ["한국어"] = "ko", ["日本語"] = "ja"
+    language_english = "en", language_russian = "ru", language_ukrainian = "uk",
+    language_spanish = "es", language_portuguese = "pt", language_korean = "ko", language_japanese = "ja"
 }
 
-local currentName = "English"
+local currentLangKey = "language_english"
 for k, v in pairs(langMapReverse) do
     if v == Mega.Localization.CurrentLanguage then
-        currentName = k
+        currentLangKey = k
         break
     end
 end
-Mega.States.Localization.CurrentLanguage = currentName
+Mega.States.Localization.CurrentLanguage = currentLangKey
+
+-- ТЕМЫ (цвета)
+local themeOptions = {"Magenta", "Red", "Cyan", "Green", "Orange", "Yellow", "Blue"}
+local themeColors = {
+    Magenta = Color3.fromRGB(200, 70, 255),
+    Red     = Color3.fromRGB(255, 50, 50),
+    Cyan    = Color3.fromRGB(0, 255, 255),
+    Green   = Color3.fromRGB(50, 255, 100),
+    Orange  = Color3.fromRGB(255, 165, 0),
+    Yellow  = Color3.fromRGB(255, 255, 50),
+    Blue    = Color3.fromRGB(50, 100, 255)
+}
+
+if not Mega.States.Temp.ThemeName then
+    Mega.States.Temp.ThemeName = "Magenta"
+    for name, col in pairs(themeColors) do
+        if col == Mega.Settings.Menu.AccentColor then
+            Mega.States.Temp.ThemeName = name
+            break
+        end
+    end
+end
 
 --#region -- Appearance
 UI.CreateSection(TabFrame, "section_settings_appearance")
 
-UI.CreateDropdown(TabFrame, "dropdown_language", "Localization.CurrentLanguage", langNames, function(val)
+UI.CreateDropdown(TabFrame, "dropdown_language", "Localization.CurrentLanguage", langKeys, function(val)
     local lang = langMapReverse[val] or "en"
     
     if lang == Mega.Localization.CurrentLanguage then return end -- Избегаем лишней перезагрузки
     
     Mega.Localization.CurrentLanguage = lang
     Mega.SaveLanguage(lang)
-    Mega.ShowNotification(Mega.GetText("notify_language_changed", val), 3)
+    Mega.ShowNotification(Mega.GetText("notify_language_changed", Mega.GetText(val)), 3)
     
     if Mega.ReloadGUI then
         task.spawn(function() task.wait(0.2); Mega.ReloadGUI() end)
     end
-end)
+end, true)
+
+UI.CreateDropdown(TabFrame, "button_change_theme", "Temp.ThemeName", themeOptions, function(val)
+    local col = themeColors[val]
+    if col then
+        Mega.Settings.Menu.AccentColor = col
+        Mega.States.Temp.ThemeName = val
+        if Mega.ShowNotification then Mega.ShowNotification(Mega.GetText("notify_theme_changed"), 2) end
+        if Mega.ReloadGUI then task.spawn(function() task.wait(0.2); Mega.ReloadGUI() end) end
+    end
+end, false)
 
 UI.CreateSlider(TabFrame, "slider_menu_transparency", "Settings.Menu.Transparency", 0, 100, function(v) 
     local trans = v / 100
@@ -76,18 +108,6 @@ end)
 
 UI.CreateKeybindButton(TabFrame, "keybind_menu", "Keybinds.Menu", function(key)
     Mega.States.Keybinds.Menu = key
-end)
-
-UI.CreateButton(TabFrame, "button_change_theme", function()
-    local colors = {
-        Color3.fromRGB(255, 50, 50), Color3.fromRGB(0, 255, 255),
-        Color3.fromRGB(50, 255, 100), Color3.fromRGB(200, 70, 255),
-        Color3.fromRGB(255, 165, 0)
-    }
-    Mega.Settings.Menu.AccentColor = colors[math.random(1, #colors)]
-    
-    if Mega.ShowNotification then Mega.ShowNotification(Mega.GetText("notify_theme_changed"), 2) end
-    if Mega.ReloadGUI then task.spawn(function() task.wait(0.2); Mega.ReloadGUI() end) end
 end)
 --#endregion
 
