@@ -18,7 +18,12 @@ TabFrame.Parent = Mega.Objects.ContentContainer
 local ContentLayout = Instance.new("UIListLayout", TabFrame)
 ContentLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 ContentLayout.SortOrder = Enum.SortOrder.LayoutOrder
-ContentLayout.Padding = UDim.new(0, 0)
+ContentLayout.Padding = UDim.new(0, 8)
+
+ContentLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+    TabFrame.CanvasSize = UDim2.new(0, 0, 0, ContentLayout.AbsoluteContentSize.Y + 40)
+end)
+TabFrame.CanvasSize = UDim2.new(0, 0, 0, ContentLayout.AbsoluteContentSize.Y + 40)
 
 -- Add this frame to the global list of tab frames
 Mega.Objects.TabFrames[tabKey] = TabFrame
