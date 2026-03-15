@@ -152,6 +152,7 @@ UI.CreateToggleWithSettings(TabFrame, "toggle_kit_esp", "KitESP.Enabled", functi
     if Mega.Features.ESP then
         Mega.Features.ESP.SetKitEnabled(state)
     end
+    Mega.ShowNotification(Mega.GetText(state and "notify_kit_esp_on" or "notify_kit_esp_off"))
 end, {
     UI.CreateSection(nil, "section_kit_filters"),
     UI.CreateToggle(nil, "toggle_kit_iron", "KitESP.Filters.Iron"),
