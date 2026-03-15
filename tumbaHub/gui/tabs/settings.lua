@@ -114,27 +114,32 @@ end)
 --#region -- Config Management
 UI.CreateSection(TabFrame, "section_settings_config")
 
-local _, configNameBox = UI.CreateTextBox(TabFrame, "textbox_config_name", Mega.GetText("textbox_config_name"))
-
 local configDropdown
 local function refreshConfigList()
     local configs = Mega.ConfigSystem.GetList()
     if #configs == 0 then table.insert(configs, "default") end
     if configDropdown then configDropdown:Destroy() end
-    Mega.States.Temp.SelectedConfig = configs[1]
+    Mega.States.Temp.SelectedConfig = Mega.States.Temp.SelectedConfig or configs[1]
     configDropdown = UI.CreateDropdown(TabFrame, "dropdown_config_list", "Temp.SelectedConfig", configs, function(val) Mega.States.Temp.SelectedConfig = val end, false)
 end
 
 refreshConfigList() -- Initial population
 
+local _, configNameBox = UI.CreateTextBox(TabFrame, "textbox_config_name", Mega.GetText("textbox_config_name"))
+
 UI.CreateButton(TabFrame, "button_config_save", function()
     local name = configNameBox.Text
-    if name and name ~= "" then
-        Mega.ConfigSystem.Save(name)
-        Mega.ShowNotification(Mega.GetText("notify_config_saved"), 2)
+    
+    -- Если поле пустое, сохраняем в текущий выбранный конфиг (или default)
+    if not name or name == "" or name == Mega.GetText("textbox_config_name") then
+        name = Mega.States.Temp.SelectedConfig or "default"
+    end
+    
+    -- Mega.ConfigSystem.Save автоматически конвертирует все Mega.States (где лежат бинды и функции) в JSON и кладет в папку configs/
+    if Mega.ConfigSystem.Save(name) then
+        Mega.ShowNotification(Mega.GetText("notify_config_saved") .. " (" .. name .. ")", 2)
+        configNameBox.Text = "" -- Очищаем поле после сохранения
         refreshConfigList()
-    else
-        Mega.ShowNotification(Mega.GetText("notify_enter_name"), 2)
     end
 end)
 
