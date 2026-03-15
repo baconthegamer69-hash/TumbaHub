@@ -10,6 +10,8 @@ local GetText = Mega.GetText
 -- Forward declaration for callbacks
 local ReloadGUI
 
+function Mega.InitializeMainGUI()
+
 -- Main GUI container
 local TumbaGUI = Instance.new("ScreenGui")
 TumbaGUI.Name = "TumbaMegaSystem"
@@ -319,3 +321,79 @@ Services.RunService.RenderStepped:Connect(function()
         Mega.UpdateStatus()
     end
 end)
+
+end -- End of Mega.InitializeMainGUI
+
+if not Mega.HasSavedLanguage() then
+    local LanguagePrompt = Instance.new("ScreenGui")
+    LanguagePrompt.Name = "LanguagePrompt"
+    LanguagePrompt.Parent = Services.CoreGui
+    LanguagePrompt.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+    local Background = Instance.new("Frame")
+    Background.Size = UDim2.new(0, 300, 0, 470)
+    Background.Position = UDim2.new(0.5, -150, 0.5, -210)
+    Background.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+    Background.BorderSizePixel = 0
+    Instance.new("UICorner", Background).CornerRadius = UDim.new(0, 10)
+    Background.Parent = LanguagePrompt
+
+    local Title = Instance.new("TextLabel")
+    Title.Size = UDim2.new(1, 0, 0, 50)
+    Title.Position = UDim2.new(0, 0, 0, 10)
+    Title.BackgroundTransparency = 1
+    Title.TextColor3 = Color3.new(1, 1, 1)
+    Title.Font = Enum.Font.GothamBold
+    Title.TextSize = 18
+    Title.Text = "TUMBA v5.0 - Select Language"
+    Title.TextXAlignment = Enum.TextXAlignment.Center
+    Title.Parent = Background
+
+    local ButtonContainer = Instance.new("Frame")
+    ButtonContainer.Size = UDim2.new(1, 0, 0, 400)
+    ButtonContainer.Position = UDim2.new(0, 0, 0, 70)
+    ButtonContainer.BackgroundTransparency = 1
+    ButtonContainer.Parent = Background
+
+    local ButtonLayout = Instance.new("UIListLayout", ButtonContainer)
+    ButtonLayout.FillDirection = Enum.FillDirection.Vertical
+    ButtonLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    ButtonLayout.VerticalAlignment = Enum.VerticalAlignment.Top
+    ButtonLayout.Padding = UDim.new(0, 10)
+
+    local function OnLanguageSelected(lang)
+        Mega.Localization.CurrentLanguage = lang
+        Mega.SaveLanguage(lang)
+        if Mega.ConfigSystem and Mega.ConfigSystem.Load then
+            Mega.ConfigSystem.Load("autosave")
+        end
+        LanguagePrompt:Destroy()
+        if Mega.ShowNotification then
+            Mega.ShowNotification("Меню открывается на RightShift", 5)
+        end
+        Mega.InitializeMainGUI()
+    end
+
+    local languages = {
+        { Name = "English", Code = "en" }, { Name = "Русский", Code = "ru" },
+        { Name = "Українська", Code = "uk" }, { Name = "Español", Code = "es" },
+        { Name = "Português", Code = "pt" }, { Name = "한국어", Code = "ko" },
+        { Name = "日本語", Code = "ja" }
+    }
+
+    for _, lang in ipairs(languages) do
+        local btn = Instance.new("TextButton", ButtonContainer)
+        btn.Size = UDim2.new(0, 250, 0, 40)
+        btn.BackgroundColor3 = Color3.fromRGB(0, 100, 200)
+        btn.TextColor3 = Color3.new(1, 1, 1)
+        btn.Font = Enum.Font.GothamSemibold
+        btn.Text = lang.Name
+        Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
+        btn.MouseButton1Click:Connect(function() OnLanguageSelected(lang.Code) end)
+    end
+else
+    if Mega.ShowNotification then
+        Mega.ShowNotification("Меню открывается на RightShift", 5)
+    end
+    Mega.InitializeMainGUI()
+end
