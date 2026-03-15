@@ -23,104 +23,219 @@ ContentLayout.Padding = UDim.new(0, 8)
 
 Mega.Objects.TabFrames[tabKey] = TabFrame
 
+task.spawn(function()
+    pcall(function() Mega.LoadModule("features/follow.lua") end)
+end)
+
 --#region -- Player List
 UI.CreateSection(TabFrame, "section_player_list")
 
-local PlayerListFrame = Instance.new("ScrollingFrame")
-PlayerListFrame.Size = UDim2.new(0.95, 0, 0, 400)
-PlayerListFrame.BackgroundColor3 = Mega.Settings.Menu.BackgroundColor
-PlayerListFrame.BackgroundTransparency = 0.5
-PlayerListFrame.BorderSizePixel = 0
-PlayerListFrame.ScrollBarThickness = 6
-PlayerListFrame.Parent = TabFrame
-local PlayerListLayout = Instance.new("UIListLayout", PlayerListFrame)
-PlayerListLayout.Padding = UDim.new(0, 5)
+UI.CreateButton(TabFrame, "button_stop_follow", function()
+    if Mega.Features.Follow and Mega.Features.Follow.StopFollow then
+        Mega.Features.Follow.StopFollow()
+    else
+        Mega.States.Player.FollowTarget = nil
+        Services.Workspace.CurrentCamera.CameraType = Enum.CameraType.Custom
+        if Mega.ShowNotification then
+            Mega.ShowNotification(Mega.GetText("notify_follow_stop"))
+        end
+    end
+end)
+
+local PlayerListHeader = Instance.new("Frame")
+PlayerListHeader.Name = "PlayerListHeader"
+PlayerListHeader.Size = UDim2.new(0.95, 0, 0, 30)
+PlayerListHeader.BackgroundColor3 = Color3.fromRGB(40, 45, 60)
+PlayerListHeader.BorderSizePixel = 0
+PlayerListHeader.Parent = TabFrame
+
+local HeaderLayout = Instance.new("UIListLayout")
+HeaderLayout.Parent = PlayerListHeader
+HeaderLayout.FillDirection = Enum.FillDirection.Horizontal
+HeaderLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+HeaderLayout.Padding = UDim.new(0, 5)
+HeaderLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+
+local HeaderCorner = Instance.new("UICorner")
+HeaderCorner.CornerRadius = UDim.new(0, 5)
+HeaderCorner.Parent = PlayerListHeader
+
+local HeaderName = Instance.new("TextLabel")
+HeaderName.Name = "HeaderName"
+HeaderName.Size = UDim2.new(0.25, 0, 1, 0)
+HeaderName.BackgroundTransparency = 1
+HeaderName.TextColor3 = Mega.Settings.Menu.SecondaryColor
+HeaderName.TextSize = 13
+HeaderName.Font = Enum.Font.GothamBold
+HeaderName.TextXAlignment = Enum.TextXAlignment.Left
+HeaderName.Position = UDim2.new(0, 10, 0, 0)
+HeaderName.Text = "  " .. Mega.GetText("playerlist_name")
+HeaderName.Parent = PlayerListHeader
+
+local HeaderTeam = HeaderName:Clone(); HeaderTeam.Name = "HeaderTeam"; HeaderTeam.Text = Mega.GetText("playerlist_team"); HeaderTeam.Parent = PlayerListHeader
+local HeaderHP = HeaderName:Clone(); HeaderHP.Name = "HeaderHP"; HeaderHP.Size = UDim2.new(0.2, 0, 1, 0); HeaderHP.Text = Mega.GetText("playerlist_hp"); HeaderHP.Parent = PlayerListHeader
+local HeaderDist = HeaderName:Clone(); HeaderDist.Name = "HeaderDist"; HeaderDist.Size = UDim2.new(0.25, 0, 1, 0); HeaderDist.Text = Mega.GetText("playerlist_dist"); HeaderDist.Parent = PlayerListHeader
+
+local PlayerListContainer = Instance.new("ScrollingFrame")
+PlayerListContainer.Name = "PlayersList"
+PlayerListContainer.Size = UDim2.new(0.95, 0, 1, -140) 
+PlayerListContainer.BackgroundTransparency = 1
+PlayerListContainer.BorderSizePixel = 0
+PlayerListContainer.ScrollBarThickness = 4
+PlayerListContainer.ScrollBarImageColor3 = Mega.Settings.Menu.AccentColor
+PlayerListContainer.Parent = TabFrame
+
+local ListLayout = Instance.new("UIListLayout")
+ListLayout.Parent = PlayerListContainer
+ListLayout.FillDirection = Enum.FillDirection.Vertical
+ListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+ListLayout.Padding = UDim.new(0, 5)
+
+local PlayerItemTemplate = Instance.new("TextButton") 
+PlayerItemTemplate.Name = "PlayerItemTemplate"
+PlayerItemTemplate.Size = UDim2.new(1, 0, 0, 35)
+PlayerItemTemplate.BackgroundColor3 = Color3.fromRGB(30, 35, 50)
+PlayerItemTemplate.BorderSizePixel = 0
+PlayerItemTemplate.Visible = false
+PlayerItemTemplate.Text = "" 
+PlayerItemTemplate.AutoButtonColor = false
+
+local ItemLayout = Instance.new("UIListLayout")
+ItemLayout.Parent = PlayerItemTemplate
+ItemLayout.FillDirection = Enum.FillDirection.Horizontal
+ItemLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+ItemLayout.Padding = UDim.new(0, 5)
+ItemLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+
+local ItemCorner = Instance.new("UICorner")
+ItemCorner.CornerRadius = UDim.new(0, 5)
+ItemCorner.Parent = PlayerItemTemplate
+
+local NameLabel = Instance.new("TextLabel")
+NameLabel.Name = "Name"
+NameLabel.Size = UDim2.new(0.25, 0, 1, 0)
+NameLabel.BackgroundTransparency = 1
+NameLabel.TextColor3 = Mega.Settings.Menu.TextColor
+NameLabel.TextSize = 12
+NameLabel.Font = Enum.Font.GothamSemibold
+NameLabel.TextXAlignment = Enum.TextXAlignment.Left
+NameLabel.Position = UDim2.new(0, 5, 0, 0)
+NameLabel.Text = Mega.GetText("playerlist_name")
+NameLabel.Parent = PlayerItemTemplate
+
+local TeamLabel = NameLabel:Clone()
+TeamLabel.Name = "Team"
+TeamLabel.Size = UDim2.new(0.25, 0, 1, 0)
+TeamLabel.Text = Mega.GetText("playerlist_team")
+TeamLabel.Parent = PlayerItemTemplate
+
+local HPLabel = NameLabel:Clone()
+HPLabel.Name = "HP"
+HPLabel.Size = UDim2.new(0.2, 0, 1, 0)
+HPLabel.Text = Mega.GetText("playerlist_hp")
+HPLabel.Parent = PlayerItemTemplate
+
+local DistanceLabel = NameLabel:Clone()
+DistanceLabel.Name = "Distance"
+DistanceLabel.Size = UDim2.new(0.25, 0, 1, 0)
+DistanceLabel.Text = Mega.GetText("playerlist_dist")
+DistanceLabel.Parent = PlayerItemTemplate
+
+local function StartFollow(player)
+    if player == Services.LocalPlayer then return end
+    Mega.States.Player.FollowTarget = player
+    if Mega.ShowNotification then
+        Mega.ShowNotification(Mega.GetText("notify_follow_start", player.Name))
+    end
+end
 
 local function updatePlayerList()
     if not TabFrame.Visible then return end
 
-    local existingPlayers = {}
-    for _, item in ipairs(PlayerListFrame:GetChildren()) do
-        if item:IsA("Frame") then existingPlayers[item.Name] = true end
+    local localHRP = Services.LocalPlayer.Character and Services.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+
+    if not Mega.Objects.PlayerListItems then Mega.Objects.PlayerListItems = {} end
+
+    for player, item in pairs(Mega.Objects.PlayerListItems) do
+        if not player or not player.Parent then
+            item:Destroy()
+            Mega.Objects.PlayerListItems[player] = nil
+        end
     end
 
     for _, player in ipairs(Services.Players:GetPlayers()) do
-        existingPlayers[player.Name] = false -- Mark as seen
-        
-        local playerFrame = PlayerListFrame:FindFirstChild(player.Name)
-        if not playerFrame then
-            playerFrame = Instance.new("Frame", PlayerListFrame)
-            playerFrame.Name = player.Name
-            playerFrame.Size = UDim2.new(1, 0, 0, 40)
-            playerFrame.BackgroundColor3 = Color3.fromRGB(40, 45, 60)
-            Instance.new("UICorner", playerFrame).CornerRadius = UDim.new(0, 6)
+        if player ~= Services.LocalPlayer then
+            local item = Mega.Objects.PlayerListItems[player]
 
-            local layout = Instance.new("UIListLayout", playerFrame)
-            layout.FillDirection = Enum.FillDirection.Horizontal
-            layout.Padding = UDim.new(0, 10)
-            layout.VerticalAlignment = Enum.VerticalAlignment.Center
+            if not item then
+                item = PlayerItemTemplate:Clone()
+                item.Name = player.Name .. "Item"
+                item.Visible = true
+                item.Parent = PlayerListContainer
+                Mega.Objects.PlayerListItems[player] = item
 
-            local nameLabel = Instance.new("TextLabel", playerFrame)
-            nameLabel.Size = UDim2.new(0.3, 0, 1, 0)
-            nameLabel.Text = player.Name
-            nameLabel.Font = Enum.Font.GothamBold
-            nameLabel.TextColor3 = Color3.new(1,1,1)
-            nameLabel.BackgroundTransparency = 1
-            
-            local hpLabel = Instance.new("TextLabel", playerFrame)
-            hpLabel.Name = "HP"
-            hpLabel.Size = UDim2.new(0.2, 0, 1, 0)
-            hpLabel.Font = Enum.Font.Gotham
-            hpLabel.TextColor3 = Color3.new(1,1,1)
-            hpLabel.BackgroundTransparency = 1
+                local p = player 
+                item.MouseButton1Click:Connect(function()
+                    StartFollow(p)
+                end)
+            end
 
-            local distLabel = Instance.new("TextLabel", playerFrame)
-            distLabel.Name = "Dist"
-            distLabel.Size = UDim2.new(0.2, 0, 1, 0)
-            distLabel.Font = Enum.Font.Gotham
-            distLabel.TextColor3 = Color3.new(1,1,1)
-            distLabel.BackgroundTransparency = 1
-            
-            local followButton = Instance.new("TextButton", playerFrame)
-            followButton.Size = UDim2.new(0.2, 0, 0, 30)
-            followButton.Text = "Follow"
-            followButton.BackgroundColor3 = Mega.Settings.Menu.AccentColor
-            Instance.new("UICorner", followButton).CornerRadius = UDim.new(0, 4)
-            followButton.MouseButton1Click:Connect(function()
-                Mega.States.Player.FollowTarget = player
-            end)
-        end
-        
-        -- Update existing labels
-        local char = player.Character
-        local localChar = Services.LocalPlayer.Character
-        if char and char.PrimaryPart and localChar and localChar.PrimaryPart then
-            playerFrame.HP.Text = string.format("HP: %.0f", char.Humanoid.Health)
-            playerFrame.Dist.Text = string.format("%.1fm", (char.PrimaryPart.Position - localChar.PrimaryPart.Position).Magnitude)
-        else
-            playerFrame.HP.Text = "HP: N/A"
-            playerFrame.Dist.Text = "Dist: N/A"
-        end
-    end
+            local char = player.Character
+            local humanoid = char and char:FindFirstChildOfClass("Humanoid")
+            local hrp = char and char:FindFirstChild("HumanoidRootPart")
 
-    -- Remove players who have left
-    for name, stillExists in pairs(existingPlayers) do
-        if stillExists then
-            local frame = PlayerListFrame:FindFirstChild(name)
-            if frame then frame:Destroy() end
+            local nameLabel = item:FindFirstChild("Name")
+            local teamLabel = item:FindFirstChild("Team")
+            local hpLabel = item:FindFirstChild("HP")
+            local distLabel = item:FindFirstChild("Distance")
+
+            if Mega.States.Player.FollowTarget == player then
+                item.BackgroundColor3 = Mega.Settings.Menu.AccentColor
+            else
+                item.BackgroundColor3 = Color3.fromRGB(30, 35, 50)
+            end
+
+            if nameLabel then
+                nameLabel.Text = player.Name
+            end
+
+            if teamLabel then
+                teamLabel.Text = (player.Team and player.Team.Name) or Mega.GetText("playerlist_team_none")
+                if player.Team and player.Team.TeamColor then
+                    teamLabel.TextColor3 = player.Team.TeamColor.Color
+                else
+                    teamLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+                end
+            end
+
+            if hpLabel and humanoid then
+                hpLabel.Text = Mega.GetText("playerlist_hp_format", math.floor(humanoid.Health))
+                hpLabel.TextColor3 = humanoid.Health > 0 and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0)
+            elseif hpLabel then
+                hpLabel.Text = Mega.GetText("playerlist_hp_dead")
+                hpLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+            end
+
+            if distLabel and localHRP and hrp then
+                local distance = (localHRP.Position - hrp.Position).Magnitude
+                distLabel.Text = Mega.GetText("playerlist_dist_format", math.floor(distance))
+            elseif distLabel then
+                distLabel.Text = Mega.GetText("playerlist_dist_none")
+            end
         end
     end
+
+    PlayerListContainer.CanvasSize = UDim2.new(0, 0, 0, ListLayout.AbsoluteContentSize.Y + 20)
 end
 
--- Update list every 2 seconds when visible
+-- Update list smoothly every 0.5s when visible
+local timer = 0
 Services.RunService.Heartbeat:Connect(function(step)
-    -- Use a simple timer to avoid running every frame
     if not TabFrame.Visible then return end
-    local timer = (timer or 0) + step
-    if timer >= 2 then
+    timer = timer + step
+    if timer >= 0.5 then
         timer = 0
-        updatePlayerList()
+        pcall(updatePlayerList)
     end
 end)
 --#endregion
-
