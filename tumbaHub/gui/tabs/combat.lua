@@ -41,10 +41,16 @@ UI.CreateToggle(TabFrame, "toggle_nospread", "Combat.NoSpread")
 --#region -- Killaura
 UI.CreateSection(TabFrame, "section_combat_killaura")
 
-UI.CreateToggleWithSettings(TabFrame, "toggle_killaura", "Combat.Killaura.Enabled", nil, {
+task.spawn(function()
+    pcall(function() Mega.LoadModule("features/killaura.lua") end)
+end)
+
+UI.CreateToggleWithSettings(TabFrame, "toggle_killaura", "Combat.Killaura.Enabled", function(state)
+    Mega.States.Combat.Killaura.Enabled = state
+    if Mega.Features.Killaura and Mega.Features.Killaura.SetEnabled then Mega.Features.Killaura.SetEnabled(state) end
+end, {
     UI.CreateSlider(nil, "slider_killaura_range", "Combat.Killaura.Range", 5, 100),
     UI.CreateSlider(nil, "slider_killaura_delay", "Combat.Killaura.Delay", 0, 1000),
     UI.CreateKeybindButton(nil, "keybind_killaura", "Keybinds.Killaura")
 })
 --#endregion
-
