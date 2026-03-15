@@ -162,26 +162,22 @@ end
 
 local function UpdateESPColors()
     for player, esp in pairs(Mega.Objects.ESP) do
-        if player and player.Character and player.Team then
-            local isTeam = States.ESP.ShowTeam and player.Team == Services.LocalPlayer.Team
-            local isEnemy = player.Team ~= Services.LocalPlayer.Team
-
-            if isTeam then
-                esp.box.Color = States.ESP.TeamColor
-                esp.name.Color = States.ESP.TeamColor
-                esp.distance.Color = States.ESP.TeamColor
-                esp.tracer.Color = States.ESP.TeamColor
-            elseif isEnemy then
-                esp.box.Color = States.ESP.EnemyColor
-                esp.name.Color = States.ESP.EnemyColor
-                esp.distance.Color = States.ESP.EnemyColor
-                esp.tracer.Color = States.ESP.EnemyColor
+        if player and player.Character then
+            local isTeam = player.Team and (player.Team == Services.LocalPlayer.Team)
+            local color = States.ESP.EnemyColor
+            
+            if States.ESP.UseTeamColor and player.Team and player.Team.TeamColor then
+                color = player.Team.TeamColor.Color
+            elseif isTeam then
+                color = States.ESP.TeamColor
             else
-                esp.box.Color = States.ESP.NeutralColor
-                esp.name.Color = States.ESP.NeutralColor
-                esp.distance.Color = States.ESP.NeutralColor
-                esp.tracer.Color = States.ESP.NeutralColor
+                color = States.ESP.EnemyColor
             end
+
+            esp.box.Color = color
+            esp.name.Color = color
+            esp.distance.Color = color
+            esp.tracer.Color = color
         end
     end
 end
@@ -197,71 +193,82 @@ local function UpdateESP()
             local humanoid = player.Character:FindFirstChild("Humanoid")
 
             if head and humanoid then
-                local screenPos, onScreen = camera:WorldToViewportPoint(rootPart.Position)
-                local distance = (Services.LocalPlayer.Character.HumanoidRootPart.Position - rootPart.Position).Magnitude
-
-                if onScreen and distance <= States.ESP.MaxDistance then
-                    local scale = 1000 / distance
-                    local width = scale * 2
-                    local height = scale * 3
-
-                    if States.ESP.Boxes then
-                        esp.box.Visible = States.ESP.Enabled
-                        esp.box.Position = Vector2.new(screenPos.X - width / 2, screenPos.Y - height / 2)
-                        esp.box.Size = Vector2.new(width, height)
-                    else
-                        esp.box.Visible = false
-                    end
-
-                    if States.ESP.Names then
-                        esp.name.Visible = States.ESP.Enabled
-                        esp.name.Position = Vector2.new(screenPos.X, screenPos.Y - height / 2 - 20)
-                        esp.name.Text = player.Name
-                    else
-                        esp.name.Visible = false
-                    end
-
-                    if States.ESP.Distance then
-                        esp.distance.Visible = States.ESP.Enabled
-                        esp.distance.Position = Vector2.new(screenPos.X, screenPos.Y + height / 2 + 10)
-                        esp.distance.Text = Mega.GetText("esp_studs", math.floor(distance))
-                    else
-                        esp.distance.Visible = false
-                    end
-
-                    if States.ESP.Health then
-                        local healthPercent = math.clamp(humanoid.Health / humanoid.MaxHealth, 0, 1)
-                        local barHeight = height * healthPercent
-                        local barColor = Color3.fromHSV(0.33 * healthPercent, 1, 1)
-
-                        esp.healthBarBack.Visible = States.ESP.Enabled
-                        esp.healthBarBack.Position = Vector2.new(screenPos.X - width / 2 - 7, screenPos.Y - height / 2)
-                        esp.healthBarBack.Size = Vector2.new(4, height)
-
-                        esp.healthBarFront.Visible = States.ESP.Enabled
-                        esp.healthBarFront.Color = barColor
-                        esp.healthBarFront.Position = Vector2.new(screenPos.X - width / 2 - 7, screenPos.Y - height / 2 + (height - barHeight))
-                        esp.healthBarFront.Size = Vector2.new(4, barHeight)
-                    else
-                        esp.healthBarBack.Visible = false
-                        esp.healthBarFront.Visible = false
-                    end
-
-                    if States.ESP.Tracers then
-                        esp.tracer.Visible = States.ESP.Enabled
-                        esp.tracer.From = Vector2.new(screenPos.X, screenPos.Y + height / 2)
-                        esp.tracer.To = screenCenter
-                    else
-                        esp.tracer.Visible = false
-                    end
-
-                else
+                local isTeammate = player.Team and (player.Team == Services.LocalPlayer.Team)
+                
+                if isTeammate and not States.ESP.ShowTeam then
                     esp.box.Visible = false
                     esp.name.Visible = false
                     esp.distance.Visible = false
                     esp.healthBarBack.Visible = false
                     esp.healthBarFront.Visible = false
                     esp.tracer.Visible = false
+                else
+                    local screenPos, onScreen = camera:WorldToViewportPoint(rootPart.Position)
+                    local distance = (Services.LocalPlayer.Character.HumanoidRootPart.Position - rootPart.Position).Magnitude
+
+                    if onScreen and distance <= States.ESP.MaxDistance then
+                        local scale = 1000 / distance
+                        local width = scale * 2
+                        local height = scale * 3
+
+                        if States.ESP.Boxes then
+                            esp.box.Visible = States.ESP.Enabled
+                            esp.box.Position = Vector2.new(screenPos.X - width / 2, screenPos.Y - height / 2)
+                            esp.box.Size = Vector2.new(width, height)
+                        else
+                            esp.box.Visible = false
+                        end
+
+                        if States.ESP.Names then
+                            esp.name.Visible = States.ESP.Enabled
+                            esp.name.Position = Vector2.new(screenPos.X, screenPos.Y - height / 2 - 20)
+                            esp.name.Text = player.Name
+                        else
+                            esp.name.Visible = false
+                        end
+
+                        if States.ESP.Distance then
+                            esp.distance.Visible = States.ESP.Enabled
+                            esp.distance.Position = Vector2.new(screenPos.X, screenPos.Y + height / 2 + 10)
+                            esp.distance.Text = Mega.GetText("esp_studs", math.floor(distance))
+                        else
+                            esp.distance.Visible = false
+                        end
+
+                        if States.ESP.Health then
+                            local healthPercent = math.clamp(humanoid.Health / humanoid.MaxHealth, 0, 1)
+                            local barHeight = height * healthPercent
+                            local barColor = Color3.fromHSV(0.33 * healthPercent, 1, 1)
+
+                            esp.healthBarBack.Visible = States.ESP.Enabled
+                            esp.healthBarBack.Position = Vector2.new(screenPos.X - width / 2 - 7, screenPos.Y - height / 2)
+                            esp.healthBarBack.Size = Vector2.new(4, height)
+
+                            esp.healthBarFront.Visible = States.ESP.Enabled
+                            esp.healthBarFront.Color = barColor
+                            esp.healthBarFront.Position = Vector2.new(screenPos.X - width / 2 - 7, screenPos.Y - height / 2 + (height - barHeight))
+                            esp.healthBarFront.Size = Vector2.new(4, barHeight)
+                        else
+                            esp.healthBarBack.Visible = false
+                            esp.healthBarFront.Visible = false
+                        end
+
+                        if States.ESP.Tracers then
+                            esp.tracer.Visible = States.ESP.Enabled
+                            esp.tracer.From = Vector2.new(screenPos.X, screenPos.Y + height / 2)
+                            esp.tracer.To = screenCenter
+                        else
+                            esp.tracer.Visible = false
+                        end
+
+                    else
+                        esp.box.Visible = false
+                        esp.name.Visible = false
+                        esp.distance.Visible = false
+                        esp.healthBarBack.Visible = false
+                        esp.healthBarFront.Visible = false
+                        esp.tracer.Visible = false
+                    end
                 end
             end
         else
