@@ -44,7 +44,14 @@ UI.CreateToggle(TabFrame, "toggle_nofall", "Player.NoFall")
 UI.CreateSection(TabFrame, "section_player_defense")
 
 UI.CreateToggle(TabFrame, "toggle_godmode", "Player.GodMode")
-UI.CreateToggle(TabFrame, "toggle_noclip", "Player.NoClip")
+
+task.spawn(function()
+    pcall(function() Mega.LoadModule("features/noclip.lua") end)
+end)
+UI.CreateToggle(TabFrame, "toggle_noclip", "Player.NoClip", function(state)
+    Mega.States.Player.NoClip = state
+    if Mega.Features.NoClip and Mega.Features.NoClip.SetEnabled then Mega.Features.NoClip.SetEnabled(state) end
+end)
 
 UI.CreateToggleWithSettings(TabFrame, "toggle_antiknockback", "Player.AntiKnockback", nil, {
     UI.CreateSlider(nil, "slider_knockback_strength", "Player.KnockbackStrength", 0, 100)
@@ -79,7 +86,14 @@ end, {
 --#region -- Misc Movement
 UI.CreateSection(TabFrame, "section_utils_fun") -- Using existing translation key
 
-UI.CreateToggleWithSettings(TabFrame, "toggle_spinbot", "Player.SpinBot", nil, {
+task.spawn(function()
+    pcall(function() Mega.LoadModule("features/spinbot.lua") end)
+end)
+
+UI.CreateToggleWithSettings(TabFrame, "toggle_spinbot", "Player.SpinBot", function(state)
+    Mega.States.Player.SpinBot = state
+    if Mega.Features.SpinBot and Mega.Features.SpinBot.SetEnabled then Mega.Features.SpinBot.SetEnabled(state) end
+end, {
     UI.CreateSlider(nil, "slider_spinspeed", "Player.SpinSpeed", 1, 100)
 })
 
