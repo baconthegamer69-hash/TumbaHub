@@ -163,6 +163,12 @@ UI.CreateButton(TabFrame, "button_config_save", function()
     end
     
     if Mega.ConfigSystem.Save(targetName) then
+        pcall(function()
+            if writefile then
+                if not isfolder("tumbaHub/configs") then pcall(makefolder, "tumbaHub/configs") end
+                pcall(writefile, "tumbaHub/configs/LastConfig.txt", targetName)
+            end
+        end)
         Mega.ShowNotification(Mega.GetText("notify_config_saved") .. " (" .. targetName .. ")", 2)
         InputBox.Text = "" -- Очищаем поле после успешного сохранения
         refreshConfigList()
@@ -173,6 +179,12 @@ UI.CreateButton(TabFrame, "button_config_load", function()
     local name = Mega.States.Temp and Mega.States.Temp.SelectedConfig
     if name and name ~= "" then
         Mega.ConfigSystem.Load(name)
+        pcall(function()
+            if writefile then
+                if not isfolder("tumbaHub/configs") then pcall(makefolder, "tumbaHub/configs") end
+                pcall(writefile, "tumbaHub/configs/LastConfig.txt", name)
+            end
+        end)
         Mega.ShowNotification(Mega.GetText("notify_config_loaded"), 2)
         if Mega.ReloadGUI then
             task.spawn(function() task.wait(0.2); Mega.ReloadGUI() end)
@@ -207,6 +219,7 @@ UI.CreateSection(TabFrame, "button_cleanup")
 
 UI.CreateButton(TabFrame, "button_cleanup", function()
     Mega.ShowNotification(Mega.GetText("notify_cleanup"), 2)
+    Mega.Unloaded = true
     -- Disconnect all connections
     for _, c in ipairs(Mega.Objects.Connections) do pcall(c.Disconnect, c) end
     for _, c in pairs(Mega.Objects.ESP or {}) do
@@ -217,6 +230,7 @@ UI.CreateButton(TabFrame, "button_cleanup", function()
     -- Destroy all GUI elements
     if Mega.Objects.GUI then Mega.Objects.GUI:Destroy() end
     if Mega.Services.CoreGui:FindFirstChild("TumbaESP_Container") then Mega.Services.CoreGui.TumbaESP_Container:Destroy() end
+    if Mega.Services.CoreGui:FindFirstChild("TumbaStatusIndicator") then Mega.Services.CoreGui.TumbaStatusIndicator:Destroy() end
     -- You might need to restore more original settings here (e.g. from Visuals)
 end)
 --#endregion
