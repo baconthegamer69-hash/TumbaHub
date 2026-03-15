@@ -125,10 +125,35 @@ end
 
 refreshConfigList() -- Initial population
 
-local _, configNameBox = UI.CreateTextBox(TabFrame, "textbox_config_name", Mega.GetText("textbox_config_name"))
+-- Ручное создание поля ввода, чтобы избежать ошибок, если UI.CreateTextBox не существует
+local TextBoxFrame = Instance.new("Frame")
+TextBoxFrame.Size = UDim2.new(0.95, 0, 0, 35)
+TextBoxFrame.BackgroundTransparency = 1
+TextBoxFrame.Parent = TabFrame
+
+local TextBoxLabel = Instance.new("TextLabel", TextBoxFrame)
+TextBoxLabel.Size = UDim2.new(0.35, 0, 1, 0)
+TextBoxLabel.BackgroundTransparency = 1
+TextBoxLabel.Text = " " .. Mega.GetText("textbox_config_name")
+TextBoxLabel.TextColor3 = Mega.Settings.Menu.TextColor
+TextBoxLabel.TextSize = 13
+TextBoxLabel.Font = Enum.Font.Gotham
+TextBoxLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+local InputBox = Instance.new("TextBox", TextBoxFrame)
+InputBox.Size = UDim2.new(0.6, 0, 0, 25)
+InputBox.Position = UDim2.new(0.38, 0, 0.5, -12.5)
+InputBox.BackgroundColor3 = Color3.fromRGB(40, 45, 60)
+InputBox.BorderSizePixel = 0
+InputBox.Text = ""
+InputBox.PlaceholderText = Mega.GetText("textbox_config_name")
+InputBox.TextColor3 = Mega.Settings.Menu.TextColor
+InputBox.TextSize = 11
+InputBox.Font = Enum.Font.Gotham
+Instance.new("UICorner", InputBox).CornerRadius = UDim.new(0, 6)
 
 UI.CreateButton(TabFrame, "button_config_save", function()
-    local inputName = configNameBox.Text
+    local inputName = InputBox.Text
     local targetName = Mega.States.Temp.SelectedConfig or "default"
     
     -- Если пользователь ввел имя, сохраняем под ним. Иначе - перезаписываем выбранный конфиг.
@@ -139,7 +164,7 @@ UI.CreateButton(TabFrame, "button_config_save", function()
     
     if Mega.ConfigSystem.Save(targetName) then
         Mega.ShowNotification(Mega.GetText("notify_config_saved") .. " (" .. targetName .. ")", 2)
-        configNameBox.Text = "" -- Очищаем поле после успешного сохранения
+        InputBox.Text = "" -- Очищаем поле после успешного сохранения
         refreshConfigList()
     end
 end)
