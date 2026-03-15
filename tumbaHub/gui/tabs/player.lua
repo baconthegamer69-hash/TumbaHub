@@ -117,7 +117,7 @@ local function onRenderStep()
     end
 end
 
-Mega.Services.RunService.RenderStepped:Connect(onRenderStep)
+Mega.Objects.Connections.PlayerTabSpeed = Mega.Services.RunService.RenderStepped:Connect(onRenderStep)
 
 -- Подключаем Infinite Jump ровно один раз, чтобы избежать утечки памяти и лагов
 if not Mega.Objects.Connections.InfiniteJump then
