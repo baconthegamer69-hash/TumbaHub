@@ -125,10 +125,21 @@ end
 
 refreshConfigList() -- Initial population
 
+local _, configNameBox = UI.CreateTextBox(TabFrame, "textbox_config_name", Mega.GetText("textbox_config_name"))
+
 UI.CreateButton(TabFrame, "button_config_save", function()
-    local name = Mega.States.Temp.SelectedConfig or "default"
-    if Mega.ConfigSystem.Save(name) then
-        Mega.ShowNotification(Mega.GetText("notify_config_saved") .. " (" .. name .. ")", 2)
+    local inputName = configNameBox.Text
+    local targetName = Mega.States.Temp.SelectedConfig or "default"
+    
+    -- Если пользователь ввел имя, сохраняем под ним. Иначе - перезаписываем выбранный конфиг.
+    if inputName and inputName ~= "" and inputName ~= Mega.GetText("textbox_config_name") then
+        targetName = inputName
+        Mega.States.Temp.SelectedConfig = targetName -- Автоматически выбираем его
+    end
+    
+    if Mega.ConfigSystem.Save(targetName) then
+        Mega.ShowNotification(Mega.GetText("notify_config_saved") .. " (" .. targetName .. ")", 2)
+        configNameBox.Text = "" -- Очищаем поле после успешного сохранения
         refreshConfigList()
     end
 end)
@@ -164,22 +175,6 @@ UI.CreateButton(TabFrame, "button_config_delete", function()
 end)
 
 UI.CreateButton(TabFrame, "button_config_refresh", refreshConfigList)
-
-local _, configNameBox = UI.CreateTextBox(TabFrame, "textbox_config_name", Mega.GetText("textbox_config_name"))
-
-UI.CreateButton(TabFrame, "button_config_create", function()
-    local name = configNameBox.Text
-    if name and name ~= "" and name ~= Mega.GetText("textbox_config_name") then
-        if Mega.ConfigSystem.Save(name) then
-            Mega.States.Temp.SelectedConfig = name
-            Mega.ShowNotification(Mega.GetText("notify_config_saved") .. " (" .. name .. ")", 2)
-            configNameBox.Text = ""
-            refreshConfigList()
-        end
-    else
-        Mega.ShowNotification(Mega.GetText("notify_enter_name"), 2)
-    end
-end)
 --#endregion
 
 --#region -- Script Cleanup
