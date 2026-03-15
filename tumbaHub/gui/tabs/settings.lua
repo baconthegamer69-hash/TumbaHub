@@ -125,20 +125,10 @@ end
 
 refreshConfigList() -- Initial population
 
-local _, configNameBox = UI.CreateTextBox(TabFrame, "textbox_config_name", Mega.GetText("textbox_config_name"))
-
 UI.CreateButton(TabFrame, "button_config_save", function()
-    local name = configNameBox.Text
-    
-    -- Если поле пустое, сохраняем в текущий выбранный конфиг (или default)
-    if not name or name == "" or name == Mega.GetText("textbox_config_name") then
-        name = Mega.States.Temp.SelectedConfig or "default"
-    end
-    
-    -- Mega.ConfigSystem.Save автоматически конвертирует все Mega.States (где лежат бинды и функции) в JSON и кладет в папку configs/
+    local name = Mega.States.Temp.SelectedConfig or "default"
     if Mega.ConfigSystem.Save(name) then
         Mega.ShowNotification(Mega.GetText("notify_config_saved") .. " (" .. name .. ")", 2)
-        configNameBox.Text = "" -- Очищаем поле после сохранения
         refreshConfigList()
     end
 end)
@@ -162,16 +152,34 @@ UI.CreateButton(TabFrame, "button_config_delete", function()
         if isfile and isfile(newPath) then
             delfile(newPath)
             Mega.ShowNotification(Mega.GetText("notify_config_deleted"), 2)
+                Mega.States.Temp.SelectedConfig = "default"
             refreshConfigList()
         elseif isfile and isfile(oldPath) then
             delfile(oldPath)
             Mega.ShowNotification(Mega.GetText("notify_config_deleted"), 2)
+                Mega.States.Temp.SelectedConfig = "default"
             refreshConfigList()
         end
     end
 end)
 
 UI.CreateButton(TabFrame, "button_config_refresh", refreshConfigList)
+
+local _, configNameBox = UI.CreateTextBox(TabFrame, "textbox_config_name", Mega.GetText("textbox_config_name"))
+
+UI.CreateButton(TabFrame, "button_config_create", function()
+    local name = configNameBox.Text
+    if name and name ~= "" and name ~= Mega.GetText("textbox_config_name") then
+        if Mega.ConfigSystem.Save(name) then
+            Mega.States.Temp.SelectedConfig = name
+            Mega.ShowNotification(Mega.GetText("notify_config_saved") .. " (" .. name .. ")", 2)
+            configNameBox.Text = ""
+            refreshConfigList()
+        end
+    else
+        Mega.ShowNotification(Mega.GetText("notify_enter_name"), 2)
+    end
+end)
 --#endregion
 
 --#region -- Script Cleanup
