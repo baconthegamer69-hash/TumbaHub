@@ -50,7 +50,15 @@ UI.CreateToggle(TabFrame, "toggle_fames_mom", "Misc.FamesMom")
 
 --#region -- Auto-Loot
 UI.CreateSection(TabFrame, "toggle_chest_steal")
-UI.CreateToggleWithSettings(TabFrame, "toggle_chest_steal", "Misc.ChestSteal.Enabled", nil, {
+
+task.spawn(function()
+    pcall(function() Mega.LoadModule("features/chest_steal.lua") end)
+end)
+
+UI.CreateToggleWithSettings(TabFrame, "toggle_chest_steal", "Misc.ChestSteal.Enabled", function(state)
+    Mega.States.Misc.ChestSteal.Enabled = state
+    if Mega.Features.ChestSteal and Mega.Features.ChestSteal.SetEnabled then Mega.Features.ChestSteal.SetEnabled(state) end
+end, {
     UI.CreateSlider(nil, "slider_chest_steal_range", "Misc.ChestSteal.Range", 5, 50)
 })
 --#endregion
