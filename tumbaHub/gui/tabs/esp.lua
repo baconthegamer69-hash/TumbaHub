@@ -42,8 +42,16 @@ end, {
     UI.CreateToggle(nil, "toggle_esp_team", "ESP.ShowTeam"),
     UI.CreateSlider(nil, "slider_esp_max_dist", "ESP.MaxDistance", 50, 2000),
     UI.CreateSection(nil, "section_esp_colors"),
-    UI.CreateButton(nil, "button_team_color", function() Mega.ShowNotification("Color pickers are not implemented yet.", 3) end),
-    UI.CreateButton(nil, "button_enemy_color", function() Mega.ShowNotification("Color pickers are not implemented yet.", 3) end)
+    UI.CreateButton(nil, "button_team_color", function()
+        local newColor = Color3.fromRGB(math.random(0, 255), math.random(0, 255), math.random(0, 255))
+        Mega.States.ESP.TeamColor = newColor
+        if Mega.ShowNotification then Mega.ShowNotification(Mega.GetText("notify_team_color_changed")) end
+    end),
+    UI.CreateButton(nil, "button_enemy_color", function()
+        local newColor = Color3.fromRGB(math.random(0, 255), math.random(0, 255), math.random(0, 255))
+        Mega.States.ESP.EnemyColor = newColor
+        if Mega.ShowNotification then Mega.ShowNotification(Mega.GetText("notify_enemy_color_changed")) end
+    end)
 })
 --#endregion
 
@@ -71,4 +79,3 @@ end, {
     end)
 })
 --#endregion
-
