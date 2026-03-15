@@ -57,9 +57,6 @@ end)
 UI.CreateToggleWithSettings(TabFrame, "toggle_chest_steal", "Misc.ChestSteal.Enabled", function(state)
     Mega.States.Misc.ChestSteal.Enabled = state
     if Mega.Features.ChestSteal and Mega.Features.ChestSteal.SetEnabled then Mega.Features.ChestSteal.SetEnabled(state) end
-    if Mega.ShowNotification then
-        Mega.ShowNotification(Mega.GetText("toggle_chest_steal") .. ": " .. (state and Mega.GetText("notify_enabled") or Mega.GetText("notify_disabled")), 2)
-    end
 end, {
     UI.CreateSlider(nil, "slider_chest_steal_range", "Misc.ChestSteal.Range", 5, 50)
 })
@@ -74,9 +71,6 @@ end)
 UI.CreateToggleWithSettings(TabFrame, "toggle_auto_deposit", "Misc.AutoDeposit.Enabled", function(state)
     Mega.States.Misc.AutoDeposit.Enabled = state
     if Mega.Features.AutoDeposit and Mega.Features.AutoDeposit.SetEnabled then Mega.Features.AutoDeposit.SetEnabled(state) end
-    if Mega.ShowNotification then
-        Mega.ShowNotification(Mega.GetText("toggle_auto_deposit") .. ": " .. (state and Mega.GetText("notify_enabled") or Mega.GetText("notify_disabled")), 2)
-    end
 end, {
     UI.CreateSlider(nil, "slider_auto_deposit_range", "Misc.AutoDeposit.Range", 5, 50),
     UI.CreateSection(nil, "section_deposit_resources"),
