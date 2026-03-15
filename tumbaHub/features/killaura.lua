@@ -1,5 +1,5 @@
 -- features/killaura.lua
--- Logic for Killaura (Optimized Single Target + Visual Marker)
+-- Logic for Killaura (Original Logic Restored)
 
 if not Mega.Features then Mega.Features = {} end
 Mega.Features.Killaura = {}
@@ -34,34 +34,6 @@ task.spawn(function()
     end)
 end)
 
-local targetMarker
-local function GetTargetMarker()
-    if not targetMarker then
-        targetMarker = Instance.new("BillboardGui")
-        targetMarker.Name = "KillauraTargetMarker"
-        targetMarker.Size = UDim2.new(0, 45, 0, 45)
-        targetMarker.StudsOffset = Vector3.new(0, 4, 0)
-        targetMarker.AlwaysOnTop = true
-
-        local icon = Instance.new("ImageLabel", targetMarker)
-        icon.Size = UDim2.new(1, 0, 1, 0)
-        icon.BackgroundTransparency = 1
-        icon.Image = "rbxassetid://13426210080" -- Иконка прицела
-        icon.ImageColor3 = Color3.fromRGB(255, 50, 50)
-        
-        -- Анимация вращения маркера
-        connections.MarkerSpin = Services.RunService.RenderStepped:Connect(function()
-            if targetMarker.Adornee then
-                icon.Rotation = icon.Rotation + 3
-            end
-        end)
-    end
-    if Services.CoreGui and targetMarker.Parent ~= Services.CoreGui then
-        targetMarker.Parent = Services.CoreGui:FindFirstChild("TumbaESP_Container") or Services.CoreGui
-    end
-    return targetMarker
-end
-
 local function getWeapon()
     local char = LocalPlayer.Character
     if not char then return nil end
@@ -69,90 +41,96 @@ local function getWeapon()
         return char.HandInvItem.Value
     end
     
+    local tool = char:FindFirstChildOfClass("Tool")
+    if tool and (tool.Name:lower():find("sword") or tool.Name:lower():find("blade") or tool.Name:lower():find("scythe")) then
+        return tool
+    end
+    
     local inv = Services.ReplicatedStorage:FindFirstChild("Inventories") and Services.ReplicatedStorage.Inventories:FindFirstChild(LocalPlayer.Name)
     if inv then
-        local possibleWeapons = {"sword", "blade", "scythe", "dao", "mace", "hammer", "dagger", "sickle", "glove", "axe", "pickaxe"}
-        for _, wName in ipairs(possibleWeapons) do
-            for _, v in pairs(inv:GetChildren()) do
-                if v.Name:lower():find(wName) then 
-                    return v 
-                end
+        for _, v in pairs(inv:GetChildren()) do
+            if v.Name:lower():find("sword") or v.Name:lower():find("blade") or v.Name:lower():find("scythe") then 
+                return v 
             end
         end
     end
     return nil
 end
 
-local lastHitTime = 0
 local vec3 = (vector and vector.create) or Vector3.new
 
-connections.KillauraLoop = Services.RunService.Heartbeat:Connect(function()
-    local marker = GetTargetMarker()
-    
-    if not States.Combat.Killaura.Enabled or not SwordHitRemote then
-        marker.Adornee = nil
-        return
-    end
-
-    local delaySecs = States.Combat.Killaura.Delay / 1000
-    if tick() - lastHitTime < delaySecs then return end
-
-    local char = LocalPlayer.Character
-    local hrp = char and char:FindFirstChild("HumanoidRootPart")
-    local weapon = getWeapon()
-
-    if not hrp or not weapon then
-        marker.Adornee = nil
-        return
-    end
-
-    local closestTarget = nil
-    local closestDist = States.Combat.Killaura.Range
-
-    -- Находим ТОЛЬКО одного ближайшего игрока/моба
-    for _, obj in pairs(Services.Workspace:GetChildren()) do
-        if obj ~= char then
-            local tHrp = obj:FindFirstChild("HumanoidRootPart") or obj.PrimaryPart
-            local hum = obj:FindFirstChildOfClass("Humanoid")
-            
-            if tHrp and (hum or obj.Name:find("Dummy")) then
-                if not hum or hum.Health > 0 then
-                    local p = Services.Players:GetPlayerFromCharacter(obj)
-                    local isEnemy = true
-                    if p and p.Team and LocalPlayer.Team and p.Team == LocalPlayer.Team then
-                        isEnemy = false
-                    end
-
-                    if isEnemy then
-                        local dist = (hrp.Position - tHrp.Position).Magnitude
-                        if dist < closestDist and dist > 0 then
-                            closestDist = dist
-                            closestTarget = obj
-                        end
-                    end
-                end
-            end
-        end
-    end
-
-    if closestTarget then
-        local tHrp = closestTarget:FindFirstChild("HumanoidRootPart") or closestTarget.PrimaryPart
-        marker.Adornee = tHrp -- Вешаем маркер на цель
-        
-        local direction = (tHrp.Position - hrp.Position).Unit
-        local spoofedSelfPos = closestDist > 14.4 and (tHrp.Position - (direction * 14.4)) or hrp.Position
-        
-        local args = { { ["chargedAttack"] = { ["chargeRatio"] = 0 }, ["entityInstance"] = closestTarget, ["validate"] = { ["targetPosition"] = { ["value"] = vec3(tHrp.Position.X, tHrp.Position.Y, tHrp.Position.Z) }, ["selfPosition"] = { ["value"] = vec3(spoofedSelfPos.X, spoofedSelfPos.Y, spoofedSelfPos.Z) }, ["raycast"] = { ["cameraPosition"] = { ["value"] = vec3(spoofedSelfPos.X, spoofedSelfPos.Y + 3, spoofedSelfPos.Z) }, ["cursorDirection"] = { ["value"] = vec3(direction.X, direction.Y, direction.Z) } } }, ["weapon"] = weapon } }
-        task.spawn(function() pcall(function() SwordHitRemote:FireServer(unpack(args)) end) end)
-        lastHitTime = tick()
-    else
-        marker.Adornee = nil -- Убираем маркер, если нет целей
-    end
-end)
+local killauraActive = false
 
 function Mega.Features.Killaura.SetEnabled(state)
     States.Combat.Killaura.Enabled = state
-    if not state and targetMarker then
-        targetMarker.Adornee = nil
+    
+    if state and not killauraActive then
+        killauraActive = true
+        task.spawn(function()
+            while States.Combat.Killaura.Enabled do
+                if not Mega.Objects.GUI or not Mega.Objects.GUI.Parent then 
+                    killauraActive = false
+                    break 
+                end
+                
+                if SwordHitRemote then
+                    local char = LocalPlayer.Character
+                    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+                    local weapon = getWeapon()
+                    
+                    if hrp and weapon then
+                        for _, obj in pairs(Services.Workspace:GetChildren()) do
+                            if obj ~= char and (obj:FindFirstChild("Humanoid") or obj.Name:find("Dummy")) then
+                                local tHrp = obj:FindFirstChild("HumanoidRootPart") or obj.PrimaryPart
+                                local hum = obj:FindFirstChild("Humanoid")
+                                
+                                if tHrp and (not hum or hum.Health > 0) then
+                                    local p = Services.Players:GetPlayerFromCharacter(obj)
+                                    local isEnemy = true
+                                    if p and p.Team and LocalPlayer.Team and p.Team == LocalPlayer.Team then
+                                        isEnemy = false
+                                    end
+
+                                    if isEnemy then
+                                        local dist = (hrp.Position - tHrp.Position).Magnitude
+                                        if dist < States.Combat.Killaura.Range and dist > 0 then
+                                            local direction = (tHrp.Position - hrp.Position).Unit
+                                            local spoofedSelfPos = hrp.Position
+                                            if dist > 14 then
+                                                spoofedSelfPos = tHrp.Position - (direction * 14)
+                                            end
+                                            
+                                            local args = {
+                                                {
+                                                    ["chargedAttack"] = { ["chargeRatio"] = 0 },
+                                                    ["entityInstance"] = obj,
+                                                    ["validate"] = {
+                                                        ["targetPosition"] = { ["value"] = vec3(tHrp.Position.X, tHrp.Position.Y, tHrp.Position.Z) },
+                                                        ["selfPosition"] = { ["value"] = vec3(spoofedSelfPos.X, spoofedSelfPos.Y, spoofedSelfPos.Z) },
+                                                        ["raycast"] = {
+                                                            ["cameraPosition"] = { ["value"] = vec3(spoofedSelfPos.X, spoofedSelfPos.Y + 3, spoofedSelfPos.Z) },
+                                                            ["cursorDirection"] = { ["value"] = vec3(direction.X, direction.Y, direction.Z) }
+                                                        }
+                                                    },
+                                                    ["weapon"] = weapon
+                                                }
+                                            }
+                                            pcall(function() SwordHitRemote:FireServer(unpack(args)) end)
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+                
+                if States.Combat.Killaura.Delay > 0 then
+                    task.wait(States.Combat.Killaura.Delay / 1000)
+                else
+                    Services.RunService.Heartbeat:Wait()
+                end
+            end
+            killauraActive = false
+        end)
     end
 end
