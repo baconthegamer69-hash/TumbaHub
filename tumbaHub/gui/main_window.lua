@@ -210,10 +210,25 @@ end
 task.wait(0.1)
 SelectTab("tab_home", TabButtons["tab_home"])
 
--- Menu Toggle Logic
+-- Keybinds Logic
 Services.UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if not gameProcessed and input.KeyCode.Name == States.Keybinds.Menu then
+    if gameProcessed then return end
+    local key = input.KeyCode.Name
+    
+    if key == States.Keybinds.Menu and key ~= "None" then
         TumbaGUI.Enabled = not TumbaGUI.Enabled
+    end
+    
+    if key == States.Keybinds.Killaura and key ~= "None" then
+        if Mega.Objects.Toggles and Mega.Objects.Toggles["toggle_killaura"] then
+            Mega.Objects.Toggles["toggle_killaura"](not States.Combat.Killaura.Enabled)
+        end
+    end
+    
+    if key == States.Keybinds.Scaffold and key ~= "None" then
+        if Mega.Objects.Toggles and Mega.Objects.Toggles["toggle_scaffold"] then
+            Mega.Objects.Toggles["toggle_scaffold"](not States.Player.Scaffold.Enabled)
+        end
     end
 end)
 
@@ -304,4 +319,3 @@ Services.RunService.RenderStepped:Connect(function()
         Mega.UpdateStatus()
     end
 end)
-
