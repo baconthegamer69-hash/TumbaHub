@@ -30,6 +30,19 @@ Mega.States.Settings.Menu.Transparency = math.floor((Mega.Settings.Menu.Transpar
 
 if not Mega.States.Temp then Mega.States.Temp = {} end
 
+if Mega.Settings.System.ShowNotifications == nil then
+    Mega.Settings.System.ShowNotifications = true
+end
+
+if not Mega.OriginalShowNotification and Mega.ShowNotification then
+    Mega.OriginalShowNotification = Mega.ShowNotification
+    Mega.ShowNotification = function(...)
+        if Mega.Settings.System.ShowNotifications then
+            Mega.OriginalShowNotification(...)
+        end
+    end
+end
+
 local langKeys = {
     "language_english", "language_russian", "language_ukrainian",
     "language_spanish", "language_portuguese", "language_korean", "language_japanese"
@@ -108,6 +121,10 @@ end)
 
 UI.CreateKeybindButton(TabFrame, "keybind_menu", "Keybinds.Menu", function(key)
     Mega.States.Keybinds.Menu = key
+end)
+
+UI.CreateToggle(TabFrame, "toggle_show_notifications", Mega.Settings.System.ShowNotifications, function(state)
+    Mega.Settings.System.ShowNotifications = state
 end)
 --#endregion
 
