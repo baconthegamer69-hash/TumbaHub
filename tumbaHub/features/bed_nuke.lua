@@ -8,7 +8,8 @@ local Services = Mega.Services or {
     Players = game:GetService("Players"),
     ReplicatedStorage = game:GetService("ReplicatedStorage"),
     CollectionService = game:GetService("CollectionService"),
-    RunService = game:GetService("RunService")
+    RunService = game:GetService("RunService"),
+    CoreGui = game:GetService("CoreGui")
 }
 local LocalPlayer = Services.Players.LocalPlayer
 local States = Mega.States
@@ -46,10 +47,104 @@ end)
 local vector = vector or {create = function(x, y, z) return Vector3.new(x, y, z) end}
 local lastCheck = 0
 
-local function BedNukeLoop()
-    if not States.Combat.BedNuke.Enabled or not DamageBlockRemote then return end
+local espFolder = Services.CoreGui:FindFirstChild("BedNukeESP")
+if not espFolder then
+    espFolder = Instance.new("Folder")
+    espFolder.Name = "BedNukeESP"
+    espFolder.Parent = Services.CoreGui
+end
+
+local function DrawESP(blocks)
+    espFolder:ClearAllChildren()
+    for _, bPos in ipairs(blocks) do
+        local box = Instance.new("BoxHandleAdornment")
+        box.Size = Vector3.new(3.1, 3.1, 3.1)
+        box.CFrame = CFrame.new(bPos * 3)
+        box.AlwaysOnTop = true
+        box.ZIndex = 5
+        box.Transparency = 0.5
+        box.Color3 = Color3.fromRGB(255, 50, 50)
+        box.Adornee = game.Workspace.Terrain -- Привязываем к террейну
+        box.Parent = espFolder
+    end
+end
+
+local function GetBlocksToBreak(hrpPos, bedPart)
+    local blocksList = {}
+    local seen = {}
+    local bedPos = bedPart.Position
     
-    -- Троттлинг 20 тиков в секунду, чтобы избежать кика за спам
+    local dir = (bedPos - hrpPos).Unit
+    local dist = (bedPos - hrpPos).Magnitude
+    
+    local overlap = OverlapParams.new()
+    overlap.FilterType = Enum.RaycastFilterType.Whitelist
+    local whitelist = {}
+    
+    -- Ищем папку с блоками на карте
+    local blocksFolder = game.Workspace:FindFirstChild("Map") and game.Workspace.Map:FindFirstChild("Blocks") or game.Workspace:FindFirstChild("Blocks")
+    if blocksFolder then table.insert(whitelist, blocksFolder) end
+    
+    -- Добавляем в whitelist все кровати
+    for _, b in ipairs(Services.CollectionService:GetTagged("bed")) do
+        if b then table.insert(whitelist, b) end
+    end
+    overlap.FilterDescendantsInstances = whitelist
+
+    -- Построение маршрута (в линию)
+    for i = 0, dist, 1.5 do
+        local point = hrpPos + dir * i
+        
+        -- Ограничение: на уровне OY кровати и выше
+        if point.Y >= (bedPos.Y - 1.5) then
+            local bPos = Vector3.new(
+                math.round(point.X / 3),
+                math.round(point.Y / 3),
+                math.round(point.Z / 3)
+            )
+            
+            local key = string.format("%d,%d,%d", bPos.X, bPos.Y, bPos.Z)
+            if not seen[key] then
+                seen[key] = true
+                
+                local realPos = bPos * 3
+                local parts = game.Workspace:GetPartBoundsInBox(CFrame.new(realPos), Vector3.new(2.5, 2.5, 2.5), overlap)
+                local hasTarget = false
+                for _, p in ipairs(parts) do
+                    if p.CanCollide or p.Name:lower():find("bed") then
+                        hasTarget = true
+                        break
+                    end
+                end
+                
+                if hasTarget then
+                    table.insert(blocksList, bPos)
+                end
+            end
+        end
+    end
+    
+    -- Всегда добавляем кровать
+    local bedBPos = Vector3.new(
+        math.round(bedPos.X / 3),
+        math.round(bedPos.Y / 3),
+        math.round(bedPos.Z / 3)
+    )
+    local bedKey = string.format("%d,%d,%d", bedBPos.X, bedBPos.Y, bedBPos.Z)
+    if not seen[bedKey] then
+        table.insert(blocksList, bedBPos)
+    end
+    
+    return blocksList
+end
+
+local function BedNukeLoop()
+    if not States.Combat.BedNuke.Enabled or not DamageBlockRemote then 
+        if espFolder then espFolder:ClearAllChildren() end
+        return 
+    end
+    
+    -- Троттлинг
     if tick() - lastCheck < 0.05 then return end
     lastCheck = tick()
 
@@ -82,38 +177,52 @@ local function BedNukeLoop()
     end
 
     if closestBed then
-        local blockPos = closestBed:GetAttribute("BlockPosition")
-        if not blockPos then
-            local bedPart = closestBed:IsA("BasePart") and closestBed or closestBed.PrimaryPart
-            blockPos = Vector3.new(math.round(bedPart.Position.X / 3), math.round(bedPart.Position.Y / 3), math.round(bedPart.Position.Z / 3))
+        local bedPart = closestBed:IsA("BasePart") and closestBed or closestBed.PrimaryPart
+        if not bedPart then 
+            if espFolder then espFolder:ClearAllChildren() end
+            return 
         end
 
-        if blockPos then
+        -- Вычисляем оптимальный прямой маршрут до кровати
+        local blocksToBreak = GetBlocksToBreak(hrp.Position, bedPart)
+        
+        -- Рендер ESP (красных блоков)
+        DrawESP(blocksToBreak)
+        
+        local delayMs = States.Combat.BedNuke.Delay or 0
+        local packetsFired = 0
+
+        for _, blockPos in ipairs(blocksToBreak) do
+            if packetsFired >= States.Combat.BedNuke.PacketsPerTick then break end
+            
             local posArg = vector.create(blockPos.X, blockPos.Y, blockPos.Z)
+            local hitPosArg = vector.create(blockPos.X * 3, blockPos.Y * 3, blockPos.Z * 3) -- ВАЖНО: мировые координаты для hitPosition
+            
             local args = {
                 {
                     ["blockRef"] = {
                         ["blockPosition"] = posArg
                     },
-                    ["hitPosition"] = posArg,
+                    ["hitPosition"] = hitPosArg,
                     ["hitNormal"] = vector.create(0, 1, 0)
                 }
             }
             
-            local delayMs = States.Combat.BedNuke.Delay or 0
-            for i = 1, States.Combat.BedNuke.PacketsPerTick do
-                task.spawn(function()
-                    if delayMs > 0 then task.wait(delayMs / 1000) end
-                    pcall(function()
-                        if DamageBlockRemote:IsA("RemoteEvent") then
-                            DamageBlockRemote:FireServer(unpack(args))
-                        elseif DamageBlockRemote:IsA("RemoteFunction") then
-                            DamageBlockRemote:InvokeServer(unpack(args))
-                        end
-                    end)
+            task.spawn(function()
+                if delayMs > 0 then task.wait(delayMs / 1000) end
+                pcall(function()
+                    if DamageBlockRemote:IsA("RemoteEvent") then
+                        DamageBlockRemote:FireServer(unpack(args))
+                    elseif DamageBlockRemote:IsA("RemoteFunction") then
+                        DamageBlockRemote:InvokeServer(unpack(args))
+                    end
                 end)
-            end
+            end)
+            
+            packetsFired = packetsFired + 1
         end
+    else
+        if espFolder then espFolder:ClearAllChildren() end
     end
 end
 
@@ -128,6 +237,7 @@ function Mega.Features.BedNuke.SetEnabled(state)
             connections.BedNukeLoop:Disconnect()
             connections.BedNukeLoop = nil
         end
+        if espFolder then espFolder:ClearAllChildren() end
     end
 end
 
