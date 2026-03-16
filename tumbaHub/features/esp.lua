@@ -6,6 +6,7 @@ Mega.Features.ESP = {}
 local Services = Mega.Services
 local States = Mega.States
 local Settings = Mega.Settings
+local LocalPlayer = Services.Players.LocalPlayer
 
 local espFolder = Instance.new("Folder", Services.CoreGui)
 espFolder.Name = "TumbaESP_Container"
@@ -31,10 +32,18 @@ local ICONS = {
 
 --#region Kit ESP Logic
 local function espadd(v, icon)
-    if not v or not v.PrimaryPart then return end
+    if not v then return end
+    
+    local adornee = v
+    if v:IsA("Model") then
+        adornee = v.PrimaryPart
+    elseif not v:IsA("BasePart") then
+        adornee = v:FindFirstChildWhichIsA("BasePart")
+    end
+    if not adornee then return end
     
     local billboard = Instance.new("BillboardGui")
-    billboard.Adornee = v.PrimaryPart
+    billboard.Adornee = adornee
     billboard.AlwaysOnTop = true
     billboard.Size = UDim2.fromOffset(32, 32)
     billboard.StudsOffsetWorldSpace = Vector3.new(0, 3, 1.5)
@@ -49,14 +58,16 @@ local function espadd(v, icon)
 
     kitEspObjects[v] = billboard
 
-    local conn = v.AncestryChanged:Connect(function(_, parent)
+    local conn
+    conn = v.AncestryChanged:Connect(function(_, parent)
         if not parent then
             if kitEspObjects[v] == billboard then kitEspObjects[v] = nil end
             billboard:Destroy()
+            if conn then conn:Disconnect() end
         end
     end)
     billboard.Destroying:Connect(function()
-        conn:Disconnect()
+        if conn then conn:Disconnect() end
         if kitEspObjects[v] == billboard then kitEspObjects[v] = nil end
     end)
 end
@@ -70,8 +81,13 @@ local function addKit(tag, icon, isCustom)
         end
     end
 
-    table.insert(kitEspConnections, Services.CollectionService:GetInstanceAddedSignal(tag):Connect(function(v) espadd(v.PrimaryPart and v, icon) end))
-    table.insert(kitEspConnections, Services.CollectionService:GetInstanceRemovedSignal(tag):Connect(function(v) if kitEspObjects[v.PrimaryPart] then kitEspObjects[v.PrimaryPart]:Destroy() end end))
+    table.insert(kitEspConnections, Services.CollectionService:GetInstanceAddedSignal(tag):Connect(function(v) espadd(v, icon) end))
+    table.insert(kitEspConnections, Services.CollectionService:GetInstanceRemovedSignal(tag):Connect(function(v) 
+        if kitEspObjects[v] then 
+            kitEspObjects[v]:Destroy() 
+            kitEspObjects[v] = nil 
+        end 
+    end))
     
     if isCustom then
         table.insert(kitEspConnections, Services.Workspace.ChildAdded:Connect(processInstance))
@@ -107,7 +123,7 @@ end
 if not Mega.Objects.ESP then Mega.Objects.ESP = {} end
 
 local function CreateESP(player)
-    if player == Services.LocalPlayer then return end
+    if player == LocalPlayer then return end
 
     local esp = {
         box = Drawing.new("Square"),
@@ -163,7 +179,7 @@ end
 local function UpdateESPColors()
     for player, esp in pairs(Mega.Objects.ESP) do
         if player and player.Parent and player.Character then
-            local isTeam = player.Team and (player.Team == Services.LocalPlayer.Team)
+            local isTeam = player.Team and LocalPlayer.Team and (player.Team == LocalPlayer.Team)
             local color = States.ESP.EnemyColor
             
             if States.ESP.UseTeamColor and player.Team and player.Team.TeamColor then
@@ -184,9 +200,11 @@ end
 
 local function UpdateESP()
     local camera = Services.Workspace.CurrentCamera
+    if not camera then return end
+    
     local screenCenter = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y)
     
-    local localChar = Services.LocalPlayer.Character
+    local localChar = LocalPlayer.Character
     local localRoot = localChar and localChar:FindFirstChild("HumanoidRootPart")
 
     for player, esp in pairs(Mega.Objects.ESP) do
@@ -198,7 +216,7 @@ local function UpdateESP()
             local humanoid = player.Character:FindFirstChild("Humanoid")
 
             if rootPart and head and humanoid and humanoid.Health > 0 then
-                local isTeammate = player.Team and Services.LocalPlayer.Team and (player.Team == Services.LocalPlayer.Team)
+                local isTeammate = player.Team and LocalPlayer.Team and (player.Team == LocalPlayer.Team)
                 
                 if not (isTeammate and not States.ESP.ShowTeam) then
                     local screenPos, onScreen = camera:WorldToViewportPoint(rootPart.Position)
