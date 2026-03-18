@@ -46,6 +46,7 @@ end)
 
 local vector = vector or {create = function(x, y, z) return Vector3.new(x, y, z) end}
 local lastCheck = 0
+local lastBreakTime = 0
 
 local espFolder = Services.CoreGui:FindFirstChild("BedNukeESP")
 if not espFolder then
@@ -190,36 +191,41 @@ local function BedNukeLoop()
         DrawESP(blocksToBreak)
         
         local delayMs = States.Combat.BedNuke.Delay or 0
-        local packetsFired = 0
+        local delaySec = delayMs / 1000
 
-        for _, blockPos in ipairs(blocksToBreak) do
-            if packetsFired >= States.Combat.BedNuke.PacketsPerTick then break end
+        if #blocksToBreak > 0 and (tick() - lastBreakTime >= delaySec) then
+            local packetsFired = 0
             
-            local posArg = vector.create(blockPos.X, blockPos.Y, blockPos.Z)
-            local hitPosArg = vector.create(blockPos.X * 3, blockPos.Y * 3, blockPos.Z * 3) -- ВАЖНО: мировые координаты для hitPosition
-            
-            local args = {
-                {
-                    ["blockRef"] = {
-                        ["blockPosition"] = posArg
-                    },
-                    ["hitPosition"] = hitPosArg,
-                    ["hitNormal"] = vector.create(0, 1, 0)
+            for _, blockPos in ipairs(blocksToBreak) do
+                if packetsFired >= States.Combat.BedNuke.PacketsPerTick then break end
+                
+                local posArg = vector.create(blockPos.X, blockPos.Y, blockPos.Z)
+                local hitPosArg = vector.create(blockPos.X * 3, blockPos.Y * 3, blockPos.Z * 3)
+                
+                local args = {
+                    {
+                        ["blockRef"] = {
+                            ["blockPosition"] = posArg
+                        },
+                        ["hitPosition"] = hitPosArg,
+                        ["hitNormal"] = vector.create(0, 1, 0)
+                    }
                 }
-            }
-            
-            task.spawn(function()
-                if delayMs > 0 then task.wait(delayMs / 1000) end
-                pcall(function()
-                    if DamageBlockRemote:IsA("RemoteEvent") then
-                        DamageBlockRemote:FireServer(unpack(args))
-                    elseif DamageBlockRemote:IsA("RemoteFunction") then
-                        DamageBlockRemote:InvokeServer(unpack(args))
-                    end
+                
+                task.spawn(function()
+                    pcall(function()
+                        if DamageBlockRemote:IsA("RemoteEvent") then
+                            DamageBlockRemote:FireServer(unpack(args))
+                        elseif DamageBlockRemote:IsA("RemoteFunction") then
+                            DamageBlockRemote:InvokeServer(unpack(args))
+                        end
+                    end)
                 end)
-            end)
+                
+                packetsFired = packetsFired + 1
+            end
             
-            packetsFired = packetsFired + 1
+            lastBreakTime = tick()
         end
     else
         if espFolder then espFolder:ClearAllChildren() end
