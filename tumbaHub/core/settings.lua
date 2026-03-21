@@ -156,7 +156,8 @@ Mega.States = {
         Adetunde = {
             Enabled = false,
             Range = 100000,
-            Duration = 5
+            Duration = 5,
+            Keybind = "None"
         },
         Lani = {
             Enabled = false,
