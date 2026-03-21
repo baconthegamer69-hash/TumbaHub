@@ -14,7 +14,7 @@ if not Mega.States.Taliah then Mega.States.Taliah = { Enabled = false, ESP = fal
 if not Mega.States.Fisherman then Mega.States.Fisherman = { Enabled = false } end
 if not Mega.States.Noelle then Mega.States.Noelle = { Enabled = false, SaveBinds = false, Binds = {} } end
 if not Mega.States.Misc then Mega.States.Misc = {} end
-if not Mega.States.Misc.Adetunde then Mega.States.Misc.Adetunde = { Enabled = false, Range = 100000, Duration = 5 } end
+if not Mega.States.Misc.Adetunde then Mega.States.Misc.Adetunde = { Enabled = false, Range = 100000, Duration = 5, Keybind = "None" } end
 
 -- Create the container frame for this tab
 local TabFrame = Instance.new("ScrollingFrame")
@@ -174,8 +174,9 @@ UI.CreateToggleWithSettings(TabFrame, "toggle_adetunde", "Misc.Adetunde.Enabled"
     if Mega.Features.Adetunde and Mega.Features.Adetunde.SetEnabled then Mega.Features.Adetunde.SetEnabled(state) end
     notifyFeature("toggle_adetunde", state)
 end, {
+    UI.CreateKeybindButton(nil, "keybind_adetunde", "Misc.Adetunde.Keybind", function(key) Mega.States.Misc.Adetunde.Keybind = key end),
     UI.CreateSlider(nil, "slider_adetunde_range", "Misc.Adetunde.Range", 10, 100000),
-    UI.CreateSlider(nil, "slider_adetunde_duration", "Misc.Adetunde.Duration", 1, 50, function(val)
+    UI.CreateSlider(nil, "slider_adetunde_duration", "Misc.Adetunde.Duration", 1, 600, function(val)
         Mega.States.Misc.Adetunde.Duration = val
     end)
 })
