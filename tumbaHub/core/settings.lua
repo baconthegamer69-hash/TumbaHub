@@ -153,6 +153,11 @@ Mega.States = {
                 ["stone"] = false
             }
         },
+        Adetunde = {
+            Enabled = false,
+            Range = 100000,
+            Duration = 5
+        },
         Lani = {
             Enabled = false,
             Keybind = "X",
@@ -190,12 +195,14 @@ Mega.States = {
     StarCollector = {
         Enabled = false,
         Range = 60,
-        ESP = false
+        ESP = false,
+        AutoCollect = false
     },
     Metal = {
         Enabled = false,
         ESP = true,
         AutoCollect = false,
+        AutoCollectLegit = false,
         Range = 25
     },
     Taliah = {
