@@ -8,15 +8,37 @@ local Services = Mega.Services or {
     ReplicatedStorage = game:GetService("ReplicatedStorage"),
     Workspace = game:GetService("Workspace"),
     RunService = game:GetService("RunService"),
-    Players = game:GetService("Players")
+    Players = game:GetService("Players"),
+    UserInputService = game:GetService("UserInputService")
 }
 local LocalPlayer = Services.Players.LocalPlayer
 local States = Mega.States
 
 if not States.Misc then States.Misc = {} end
 if not States.Misc.Adetunde then
-    States.Misc.Adetunde = { Enabled = false, Range = 100000, Duration = 5 }
+    States.Misc.Adetunde = { Enabled = false, Range = 100000, Duration = 5, Keybind = "None" }
+elseif States.Misc.Adetunde.Keybind == nil then
+    States.Misc.Adetunde.Keybind = "None"
 end
+
+if not Mega.Objects.AdetundeConnections then Mega.Objects.AdetundeConnections = {} end
+local connections = Mega.Objects.AdetundeConnections
+
+for k, conn in pairs(connections) do
+    if typeof(conn) == "RBXScriptConnection" then conn:Disconnect() end
+end
+table.clear(connections)
+
+connections.AdetundeInput = Services.UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if not gameProcessed and input.KeyCode.Name == States.Misc.Adetunde.Keybind and input.KeyCode.Name ~= "None" then
+        local newState = not States.Misc.Adetunde.Enabled
+        if Mega.Objects.Toggles and Mega.Objects.Toggles["toggle_adetunde"] then
+            Mega.Objects.Toggles["toggle_adetunde"](newState)
+        else
+            Mega.Features.Adetunde.SetEnabled(newState)
+        end
+    end
+end)
 
 local SwordHitRemote
 task.spawn(function()
