@@ -81,6 +81,7 @@ Mega.Localization = {
         ["noelle_back"] = { ru = "⬅ Список игроков", en = "⬅ Player List", es = "⬅ Lista de Jugadores", pt = "⬅ Lista de Jogadores", ko = "⬅ 플레이어 목록", ja = "⬅ プレイヤーリスト", uk = "⬅ Список гравців" },
         ["noelle_bound_other"] = { ru = "(Занят)", en = "(Bound)", es = "(Ocupado)", pt = "(Ocupado)", ko = "(바인딩됨)", ja = "(バインド済み)", uk = "(Зайнятий)" },
         ["toggle_noelle_save_binds"] = { ru = "Сохранять привязку", en = "Save Binds", es = "Guardar Ataduras", pt = "Salvar Vínculos", ko = "바인드 저장", ja = "バインド保存", uk = "Зберегти прив'язку" },
+        ["keybind_adetunde"] = { ru = "Клавиша активации", en = "Activation Key", es = "Tecla de Activación", pt = "Tecla de Ativação", ko = "활성화 키", ja = "アクティベーションキー", uk = "Клавіша активації" },
         ["toggle_adetunde"] = { ru = "Адетунде (Adetunde)", en = "Adetunde", es = "Adetunde", pt = "Adetunde", ko = "아데툰데", ja = "アデトゥンデ", uk = "Адетунде" },
         ["slider_adetunde_range"] = { ru = "Радиус удара", en = "Hit Range", es = "Rango de Golpe", pt = "Alcance do Golpe", ko = "타격 범위", ja = "ヒット範囲", uk = "Радіус удару" },
         ["slider_adetunde_duration"] = { ru = "Длительность (x10 сек)", en = "Duration (x10 sec)", es = "Duración (x10 seg)", pt = "Duração (x10 seg)", ko = "지속 시간 (x10 초)", ja = "期間 (x10 秒)", uk = "Тривалість (x10 сек)" },
