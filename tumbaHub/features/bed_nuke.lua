@@ -228,16 +228,16 @@ local function BedNukeLoop()
                         local bv = Instance.new("BodyVelocity")
                         bv.Name = "BedNukeBypass"
                         bv.MaxForce = Vector3.new(0, 9e9, 0)
-                        bv.Velocity = Vector3.new(0, 50, 0) -- Скорость подъема (например, 50 стадов/сек)
+                        bv.Velocity = Vector3.new(0, 100, 0) -- Очень высокая скорость (100 стадов/сек)
                         bv.Parent = hrp
                         
-                        task.wait(3) -- Сколько секунд летим вверх
+                        task.wait(0.2) -- 100 * 0.2 = ровно 20 стадов вверх
                         if bv.Parent then bv.Velocity = Vector3.new(0, 0, 0) end
                         
                         task.wait(0.5)
-                        if bv.Parent then bv.Velocity = Vector3.new(0, -50, 0) end -- Скорость спуска (отрицательная)
+                        if bv.Parent then bv.Velocity = Vector3.new(0, -100, 0) end -- Быстрый спуск
                         
-                        task.wait(0.4) -- Сколько секунд летим вниз
+                        task.wait(0.2) -- Возвращаемся те же 20 стадов
                         if bv.Parent then bv:Destroy() end
                         
                         lastBypassTime = tick()
