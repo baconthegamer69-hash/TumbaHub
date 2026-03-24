@@ -17,7 +17,9 @@ local States = Mega.States
 -- Гарантируем, что настройки существуют
 if not States.Combat then States.Combat = {} end
 if not States.Combat.BedNuke then
-    States.Combat.BedNuke = { Enabled = false, Range = 25, MinRange = 1, PacketsPerTick = 1, Delay = 0 }
+    States.Combat.BedNuke = { Enabled = false, Range = 25, MinRange = 1, PacketsPerTick = 1, Delay = 0, Bypass = false }
+elseif States.Combat.BedNuke.Bypass == nil then
+    States.Combat.BedNuke.Bypass = false
 end
 
 if not Mega.Objects.BedNukeConnections then Mega.Objects.BedNukeConnections = {} end
@@ -48,6 +50,7 @@ local vector = vector or {create = function(x, y, z) return Vector3.new(x, y, z)
 local lastCheck = 0
 local lastBreakTime = 0
 local lastBypassTime = 0
+local isBypassing = false
 
 local espFolder = Services.CoreGui:FindFirstChild("BedNukeESP")
 if not espFolder then
@@ -216,20 +219,31 @@ local function BedNukeLoop()
         local delaySec = delayMs / 1000
 
         if #blocksToBreak > 0 and (tick() - lastBreakTime >= delaySec) then
-            -- Античит байпасс: сброс кулдауна сервера через микро-прыжок
-            if tick() - lastBypassTime > 0.2 then
-                lastBypassTime = tick()
-                local oldCFrame = hrp.CFrame
-                local oldVel = hrp.AssemblyLinearVelocity
-                hrp.CFrame = oldCFrame + Vector3.new(0, 20, 0)
-                hrp.AssemblyLinearVelocity = Vector3.new(oldVel.X, 0, oldVel.Z)
-                task.spawn(function()
-                    task.wait() -- Ждем один тик, чтобы сервер зарегистрировал обновление позиции
-                    if hrp and hrp.Parent then
-                        hrp.CFrame = oldCFrame
-                        hrp.AssemblyLinearVelocity = oldVel
-                    end
-                end)
+            -- Античит байпасс: сброс кулдауна сервера через полет
+            if States.Combat.BedNuke.Bypass and not isBypassing then
+                if tick() - lastBypassTime > 4 then
+                    isBypassing = true
+                    task.spawn(function()
+                        if not hrp then return end
+                        local bv = Instance.new("BodyVelocity")
+                        bv.Name = "BedNukeBypass"
+                        bv.MaxForce = Vector3.new(0, 9e9, 0)
+                        bv.Velocity = Vector3.new(0, 20, 0)
+                        bv.Parent = hrp
+                        
+                        task.wait(1)
+                        if bv.Parent then bv.Velocity = Vector3.new(0, 0, 0) end
+                        
+                        task.wait(0.5)
+                        if bv.Parent then bv.Velocity = Vector3.new(0, -20, 0) end
+                        
+                        task.wait(1)
+                        if bv.Parent then bv:Destroy() end
+                        
+                        lastBypassTime = tick()
+                        isBypassing = false
+                    end)
+                end
             end
 
             local packetsFired = 0
@@ -280,6 +294,12 @@ function Mega.Features.BedNuke.SetEnabled(state)
         if connections.BedNukeLoop then
             connections.BedNukeLoop:Disconnect()
             connections.BedNukeLoop = nil
+        end
+        isBypassing = false
+        local char = LocalPlayer.Character
+        local hrp = char and char:FindFirstChild("HumanoidRootPart")
+        if hrp and hrp:FindFirstChild("BedNukeBypass") then
+            hrp.BedNukeBypass:Destroy()
         end
         ClearESP()
     end
