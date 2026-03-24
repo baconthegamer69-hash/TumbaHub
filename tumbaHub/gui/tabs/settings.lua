@@ -131,13 +131,26 @@ end)
 --#region -- Config Management
 UI.CreateSection(TabFrame, "section_settings_config")
 
+-- Контейнер для выпадающего списка, чтобы он не падал в конец вкладки при обновлении
+local DropdownContainer = Instance.new("Frame")
+DropdownContainer.Name = "DropdownContainer"
+DropdownContainer.Size = UDim2.new(1, 0, 0, 35)
+DropdownContainer.BackgroundTransparency = 1
+DropdownContainer.Parent = TabFrame
+
 local configDropdown
 local function refreshConfigList()
     local configs = Mega.ConfigSystem.GetList()
     if #configs == 0 then table.insert(configs, "default") end
     if configDropdown then configDropdown:Destroy() end
-    Mega.States.Temp.SelectedConfig = Mega.States.Temp.SelectedConfig or configs[1]
-    configDropdown = UI.CreateDropdown(TabFrame, "dropdown_config_list", "Temp.SelectedConfig", configs, function(val) Mega.States.Temp.SelectedConfig = val end, false)
+    
+    -- Безопасная проверка: существует ли текущий выбранный конфиг
+    local current = Mega.States.Temp.SelectedConfig
+    local found = false
+    if current then for _, v in ipairs(configs) do if v == current then found = true break end end end
+    if not found then Mega.States.Temp.SelectedConfig = configs[1] end
+    
+    configDropdown = UI.CreateDropdown(DropdownContainer, "dropdown_config_list", "Temp.SelectedConfig", configs, function(val) Mega.States.Temp.SelectedConfig = val end, false)
 end
 
 refreshConfigList() -- Initial population
