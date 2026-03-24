@@ -123,7 +123,8 @@ UI.CreateKeybindButton(TabFrame, "keybind_menu", "Keybinds.Menu", function(key)
     Mega.States.Keybinds.Menu = key
 end)
 
-UI.CreateToggle(TabFrame, "toggle_show_notifications", Mega.Settings.System.ShowNotifications, function(state)
+Mega.States.Temp.ShowNotifications = Mega.Settings.System.ShowNotifications
+UI.CreateToggle(TabFrame, "toggle_show_notifications", "Temp.ShowNotifications", function(state)
     Mega.Settings.System.ShowNotifications = state
 end)
 --#endregion
