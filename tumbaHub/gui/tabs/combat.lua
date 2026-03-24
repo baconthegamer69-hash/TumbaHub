@@ -67,21 +67,37 @@ end, {
 --#region -- Bed Nuke
 UI.CreateSection(TabFrame, "section_combat_bednuke")
 
-task.spawn(function()
-    pcall(function() Mega.LoadModule("features/bed_nuke.lua") end)
-end)
+local bedNukeSettings = {
+    -- Максимальная дистанция
+    UI.CreateSlider(nil, "slider_bednuke_range", "Combat.BedNuke.Range", 5, 50, function(val) 
+        Mega.States.Combat.BedNuke.Range = val 
+    end),
+    
+    -- Минимальная дистанция (чтобы не ломать блоки прямо под собой)
+    UI.CreateSlider(nil, "slider_bednuke_min_range", "Combat.BedNuke.MinRange", 1, 15, function(val) 
+        Mega.States.Combat.BedNuke.MinRange = val 
+    end),
+    
+    UI.CreateToggle(nil, "toggle_bednuke_bypass", "Combat.BedNuke.Bypass"),
+    
+    -- Задержка (мс) - Скорость ломания
+    UI.CreateSlider(nil, "slider_bednuke_delay", "Combat.BedNuke.Delay", 0, 1000, function(val) 
+        Mega.States.Combat.BedNuke.Delay = val 
+    end),
+    
+    -- Пакетов за тик (мощность нюка)
+    UI.CreateSlider(nil, "slider_bednuke_packets", "Combat.BedNuke.PacketsPerTick", 1, 10, function(val) 
+        Mega.States.Combat.BedNuke.PacketsPerTick = val 
+    end)
+}
 
-UI.CreateToggleWithSettings(TabFrame, "toggle_bednuke", "Combat.BedNuke.Enabled", function(state)
-    Mega.States.Combat.BedNuke.Enabled = state
-    if Mega.Features.BedNuke and Mega.Features.BedNuke.SetEnabled then Mega.Features.BedNuke.SetEnabled(state) end
-    if Mega.ShowNotification then
-        local title = Mega.GetText("toggle_bednuke") or "Bed Nuke"
-        Mega.ShowNotification(title .. ": " .. (state and Mega.GetText("notify_enabled") or Mega.GetText("notify_disabled")), 2)
+UI.CreateToggleWithSettings(TabFrame, "toggle_bednuke", Mega.States.Combat.BedNuke.Enabled, function(state)
+    -- Безопасный вызов метода включения/выключения
+    if Mega.Features.BedNuke and Mega.Features.BedNuke.SetEnabled then
+        Mega.Features.BedNuke.SetEnabled(state)
+    else
+        -- Fallback, если модуль еще не прогрузился
+        Mega.States.Combat.BedNuke.Enabled = state
     end
-end, {
-    UI.CreateSlider(nil, "slider_bednuke_min_range", "Combat.BedNuke.MinRange", 1, 10),
-    UI.CreateSlider(nil, "slider_bednuke_range", "Combat.BedNuke.Range", 5, 50),
-    UI.CreateSlider(nil, "slider_bednuke_packets", "Combat.BedNuke.PacketsPerTick", 1, 10),
-    UI.CreateSlider(nil, "slider_bednuke_delay", "Combat.BedNuke.Delay", 0, 1000)
-})
+end, bedNukeSettings)
 --#endregion
