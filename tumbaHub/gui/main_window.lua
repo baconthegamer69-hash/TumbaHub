@@ -184,7 +184,7 @@ MinimizeButton.MouseButton1Click:Connect(function()
 end)
 
 -- Tab System
-local TabKeys = { "tab_home", "tab_updates", "tab_esp", "tab_aim", "tab_player", "tab_combat", "tab_visuals", "tab_farm", "tab_users", "tab_utils", "tab_settings" }
+local TabKeys = { "tab_home", "tab_updates", "tab_esp", "tab_aim", "tab_player", "tab_combat", "tab_bot", "tab_visuals", "tab_farm", "tab_users", "tab_utils", "tab_settings" }
 local TabButtons = {}
 Mega.Objects.TabFrames = {}
 
