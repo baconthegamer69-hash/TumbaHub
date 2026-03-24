@@ -104,11 +104,13 @@ local function drawPath(waypoints)
 end
 
 local prevModuleStates = {}
+local stuckTimer = 0
 
 function Mega.Features.Bot.SetEnabled(state)
     States.Bot.Enabled = state
     
     if state then
+        stuckTimer = 0
         -- Сохраняем предыдущие состояния, чтобы вернуть их при выключении бота
         prevModuleStates.Killaura = States.Combat.Killaura and States.Combat.Killaura.Enabled
         prevModuleStates.Scaffold = States.Player.Scaffold and States.Player.Scaffold.Enabled
@@ -123,7 +125,7 @@ function Mega.Features.Bot.SetEnabled(state)
         if States.Bot.AutoAntiVoid and Mega.Features.AntiVoid and not prevModuleStates.AntiVoid then Mega.Features.AntiVoid.SetEnabled(true) end
         if States.Bot.AutoSpider and Mega.Features.Spider and not prevModuleStates.Spider then Mega.Features.Spider.SetEnabled(true) end
 
-        connections.BotLoop = Services.RunService.Heartbeat:Connect(function()
+        connections.BotLoop = Services.RunService.Heartbeat:Connect(function(dt)
             if not States.Bot.Enabled then return end
             
             local char = LocalPlayer.Character
@@ -135,7 +137,17 @@ function Mega.Features.Bot.SetEnabled(state)
             if not target then
                 hum:MoveTo(hrp.Position) -- Останавливаемся если нет целей
                 if espPathFolder then espPathFolder:ClearAllChildren() end
+                stuckTimer = 0
                 return 
+            end
+
+            local distToTargetXZ = (hrp.Position * Vector3.new(1,0,1) - target.Position * Vector3.new(1,0,1)).Magnitude
+            
+            -- Если мы вошли в радиус работы модулей (12 стадов), останавливаемся, чтобы не биться головой в цель
+            if distToTargetXZ <= 12 then
+                hum:MoveTo(hrp.Position)
+                stuckTimer = 0
+                return
             end
 
             if States.Bot.Pathfinding then
@@ -166,26 +178,39 @@ function Mega.Features.Bot.SetEnabled(state)
                     if wp.Action == Enum.PathWaypointAction.Jump then
                         hum.Jump = true
                     end
-                    
-                    -- Логика застревания (прыгаем, если застряли)
-                    if hrp.AssemblyLinearVelocity.Magnitude < 2 and hum.MoveDirection.Magnitude > 0.1 then
-                        hum.Jump = true
-                    end
 
                     local distToWp = (hrp.Position * Vector3.new(1,0,1) - wp.Position * Vector3.new(1,0,1)).Magnitude
-                    if distToWp < 4 then
+                    if distToWp < 3 then
                         waypointIndex = waypointIndex + 1
                     end
                 else
                     -- Фоллбек если маршрут не найден (Scaffold проложит мост)
                     hum:MoveTo(target.Position)
-                    if hrp.AssemblyLinearVelocity.Magnitude < 2 and hum.MoveDirection.Magnitude > 0.1 then hum.Jump = true end
                 end
             else
                 -- Режим без Pathfinding (идем напрямик, строитель все делает сам)
                 hum:MoveTo(target.Position)
-                if hrp.AssemblyLinearVelocity.Magnitude < 2 and hum.MoveDirection.Magnitude > 0.1 then hum.Jump = true end
                 if espPathFolder then espPathFolder:ClearAllChildren() end
+            end
+            
+            -- Умная логика анти-застревания (срабатывает, если мы должны идти к цели, но стоим на месте)
+            local velXZ = hrp.AssemblyLinearVelocity * Vector3.new(1, 0, 1)
+            if velXZ.Magnitude < 2.5 then
+                stuckTimer = stuckTimer + dt
+                if stuckTimer > 0.1 then
+                    hum.Jump = true -- Пытаемся перепрыгнуть
+                end
+                if stuckTimer > 1.0 then
+                    -- Принудительный обход блока (направление берем от поворота тела, так как MoveDirection может быть 0)
+                    local lookDir = hrp.CFrame.LookVector * Vector3.new(1, 0, 1)
+                    if lookDir.Magnitude > 0.1 then lookDir = lookDir.Unit else lookDir = Vector3.new(1, 0, 0) end
+                    
+                    hrp.CFrame = hrp.CFrame + Vector3.new(0, 6.5, 0) + (lookDir * 2)
+                    hrp.AssemblyLinearVelocity = Vector3.new(0, 10, 0)
+                    stuckTimer = 0
+                end
+            else
+                stuckTimer = 0
             end
         end)
     else
