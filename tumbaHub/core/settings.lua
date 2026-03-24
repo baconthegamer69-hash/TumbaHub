@@ -99,6 +99,7 @@ Mega.States = {
         HighJumpPower = 50,
         Sprint = false,
         NoFall = false,
+        AntiVoid = false,
         FollowTarget = nil,
         SpinBot = false,
         SpinSpeed = 10,
