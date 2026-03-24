@@ -127,7 +127,8 @@ Mega.States = {
         AutoKillaura = true,
         AutoScaffold = true,
         AutoBedNuke = true,
-        AutoAntiVoid = true
+        AutoAntiVoid = true,
+        AutoSpider = true
     },
     Combat = {
         TriggerBot = false,
