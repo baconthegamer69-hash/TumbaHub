@@ -78,6 +78,8 @@ local bedNukeSettings = {
         Mega.States.Combat.BedNuke.MinRange = val 
     end),
     
+    UI.CreateToggle(nil, "toggle_bednuke_bypass", "Combat.BedNuke.Bypass"),
+    
     -- Задержка (мс) - Скорость ломания
     UI.CreateSlider(nil, "slider_bednuke_delay", "Combat.BedNuke.Delay", 0, 1000, function(val) 
         Mega.States.Combat.BedNuke.Delay = val 
@@ -89,13 +91,10 @@ local bedNukeSettings = {
     end)
 }
 
-UI.CreateToggleWithSettings(TabFrame, "toggle_bednuke", Mega.States.Combat.BedNuke.Enabled, function(state)
-    -- Безопасный вызов метода включения/выключения
+UI.CreateToggleWithSettings(TabFrame, "toggle_bednuke", "Combat.BedNuke.Enabled", function(state)
+    Mega.States.Combat.BedNuke.Enabled = state
     if Mega.Features.BedNuke and Mega.Features.BedNuke.SetEnabled then
         Mega.Features.BedNuke.SetEnabled(state)
-    else
-        -- Fallback, если модуль еще не прогрузился
-        Mega.States.Combat.BedNuke.Enabled = state
     end
 end, bedNukeSettings)
 --#endregion
