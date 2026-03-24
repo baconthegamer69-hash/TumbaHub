@@ -42,10 +42,20 @@ UI.CreateToggle(TabFrame, "toggle_nofall", "Player.NoFall")
 task.spawn(function()
     pcall(function() Mega.LoadModule("features/antivoid.lua") end)
 end)
-UI.CreateToggle(TabFrame, "toggle_antivoid", "Player.AntiVoid", function(state)
-    Mega.States.Player.AntiVoid = state
+UI.CreateToggleWithSettings(TabFrame, "toggle_antivoid", "Player.AntiVoid.Enabled", function(state)
+    Mega.States.Player.AntiVoid.Enabled = state
     if Mega.Features.AntiVoid and Mega.Features.AntiVoid.SetEnabled then Mega.Features.AntiVoid.SetEnabled(state) end
-end)
+end, {
+    UI.CreateSlider(nil, "slider_antivoid_ylevel", "Player.AntiVoid.YLevel", -100, 100),
+    UI.CreateToggle(nil, "toggle_antivoid_esp", "Player.AntiVoid.ESP", function(state)
+        Mega.States.Player.AntiVoid.ESP = state
+        if Mega.Features.AntiVoid and Mega.Features.AntiVoid.UpdateESP then Mega.Features.AntiVoid.UpdateESP() end
+    end),
+    UI.CreateSlider(nil, "slider_antivoid_esp_transparency", "Player.AntiVoid.ESPTransparency", 0, 100, function(val)
+        Mega.States.Player.AntiVoid.ESPTransparency = val / 100
+        if Mega.Features.AntiVoid and Mega.Features.AntiVoid.UpdateESP then Mega.Features.AntiVoid.UpdateESP() end
+    end)
+})
 --#endregion
 
 --#region -- Defense / Utility
