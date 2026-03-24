@@ -119,6 +119,7 @@ Mega.Localization = {
         ["toggle_bot_scaffold"] = { ru = "Авто-Scaffold", en = "Auto-Scaffold", es = "Auto-Scaffold", pt = "Auto-Scaffold", ko = "자동 스캐폴드", ja = "オート足場", uk = "Авто-Scaffold" },
         ["toggle_bot_bednuke"] = { ru = "Авто-Bed Nuke", en = "Auto-Bed Nuke", es = "Auto-Bed Nuke", pt = "Auto-Bed Nuke", ko = "자동 베드 뉴크", ja = "オートベッドヌーク", uk = "Авто-Bed Nuke" },
         ["toggle_bot_antivoid"] = { ru = "Авто-Anti Void", en = "Auto-Anti Void", es = "Auto-Anti Void", pt = "Auto-Anti Void", ko = "자동 안티 보이드", ja = "オートアンチボイド", uk = "Авто-Anti Void" },
+        ["toggle_bot_spider"] = { ru = "Авто-Спайдер", en = "Auto-Spider", es = "Auto-Araña", pt = "Auto-Aranha", ko = "자동 스파이더", ja = "オートスパイダー", uk = "Авто-Спайдер" },
         ["title_bar"] = { ru = "💎 TUMBA MEGA SYSTEM v%s 💎", en = "💎 TUMBA MEGA SYSTEM v%s 💎", es = "💎 SISTEMA MEGA TUMBA v%s 💎", pt = "💎 SISTEMA MEGA TUMBA v%s 💎", ko = "💎 TUMBA 메가 시스템 v%s 💎", ja = "💎 TUMBA メガシステム v%s 💎", uk = "💎 TUMBA MEGA SYSTEM v%s 💎" },
         ["title_bar_with_tab"] = { ru = "💎 %s - TUMBA MEGA SYSTEM 💎", en = "💎 %s - TUMBA MEGA SYSTEM 💎", es = "💎 %s - SISTEMA MEGA TUMBA 💎", pt = "💎 %s - SISTEMA MEGA TUMBA 💎", ko = "💎 %s - TUMBA 메가 시스템 💎", ja = "💎 %s - TUMBA メガシステム 💎", uk = "💎 %s - TUMBA MEGA SYSTEM 💎" },
         ["keybind_listening"] = { ru = "Нажмите клавишу...", en = "Press a key...", es = "Presiona una tecla...", pt = "Pressione uma tecla...", ko = "키를 누르세요...", ja = "キーを押してください...", uk = "Натисніть клавішу..." },
