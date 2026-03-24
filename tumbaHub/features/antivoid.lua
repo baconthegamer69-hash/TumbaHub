@@ -45,7 +45,7 @@ function Mega.Features.AntiVoid.UpdateESP()
         espPart.Name = "AntiVoidESP"
         espPart.Anchored = true
         espPart.CanCollide = false
-        espPart.Size = Vector3.new(2048, 2, 2048)
+        espPart.Size = Vector3.new(10000, 2, 10000)
         espPart.Material = Enum.Material.ForceField
         espPart.Color = Color3.fromRGB(255, 50, 50)
         espPart.CastShadow = false
