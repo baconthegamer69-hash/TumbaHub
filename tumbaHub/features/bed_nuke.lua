@@ -47,6 +47,7 @@ end)
 local vector = vector or {create = function(x, y, z) return Vector3.new(x, y, z) end}
 local lastCheck = 0
 local lastBreakTime = 0
+local lastBypassTime = 0
 
 local espFolder = Services.CoreGui:FindFirstChild("BedNukeESP")
 if not espFolder then
@@ -213,38 +214,31 @@ local function BedNukeLoop()
         
         local delayMs = States.Combat.BedNuke.Delay or 0
         local delaySec = delayMs / 1000
-        -- Ограничиваем минимальную задержку, чтобы античит не блокировал урон
-        if delaySec < 0.05 then delaySec = 0.05 end
 
         if #blocksToBreak > 0 and (tick() - lastBreakTime >= delaySec) then
+            -- Античит байпасс: сброс кулдауна сервера через микро-прыжок
+            if tick() - lastBypassTime > 0.2 then
+                lastBypassTime = tick()
+                local oldCFrame = hrp.CFrame
+                local oldVel = hrp.AssemblyLinearVelocity
+                hrp.CFrame = oldCFrame + Vector3.new(0, 20, 0)
+                hrp.AssemblyLinearVelocity = Vector3.new(oldVel.X, 0, oldVel.Z)
+                task.spawn(function()
+                    task.wait() -- Ждем один тик, чтобы сервер зарегистрировал обновление позиции
+                    if hrp and hrp.Parent then
+                        hrp.CFrame = oldCFrame
+                        hrp.AssemblyLinearVelocity = oldVel
+                    end
+                end)
+            end
+
             local packetsFired = 0
             
             for _, blockPos in ipairs(blocksToBreak) do
                 if packetsFired >= States.Combat.BedNuke.PacketsPerTick then break end
                 
-                local realPos = blockPos * 3
-                local diff = hrp.Position - realPos
-                
-                -- Динамически вычисляем открытую грань блока (смотрящую на игрока)
-                local normX, normY, normZ = 0, 1, 0
-                local absX, absY, absZ = math.abs(diff.X), math.abs(diff.Y), math.abs(diff.Z)
-                if absX > absY and absX > absZ then
-                    normX = diff.X > 0 and 1 or -1
-                    normY, normZ = 0, 0
-                elseif absY > absX and absY > absZ then
-                    normY = diff.Y > 0 and 1 or -1
-                    normX, normZ = 0, 0
-                else
-                    normZ = diff.Z > 0 and 1 or -1
-                    normX, normY = 0, 0
-                end
-
                 local posArg = vector.create(blockPos.X, blockPos.Y, blockPos.Z)
-                local hitPosArg = vector.create(
-                    realPos.X + (normX * 1.5),
-                    realPos.Y + (normY * 1.5),
-                    realPos.Z + (normZ * 1.5)
-                )
+                local hitPosArg = vector.create(blockPos.X * 3, blockPos.Y * 3, blockPos.Z * 3)
                 
                 local args = {
                     {
@@ -252,7 +246,7 @@ local function BedNukeLoop()
                             ["blockPosition"] = posArg
                         },
                         ["hitPosition"] = hitPosArg,
-                        ["hitNormal"] = vector.create(normX, normY, normZ)
+                        ["hitNormal"] = vector.create(0, 1, 0)
                     }
                 }
                 
