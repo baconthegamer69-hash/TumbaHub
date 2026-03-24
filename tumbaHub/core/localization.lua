@@ -95,7 +95,6 @@ Mega.Localization = {
         ["toggle_bednuke"] = { ru = "Bed Nuke", en = "Bed Nuke", es = "Bed Nuke", pt = "Bed Nuke", ko = "Bed Nuke", ja = "Bed Nuke", uk = "Bed Nuke" },
         ["slider_bednuke_range"] = { ru = "Макс. дистанция", en = "Max Range", es = "Rango Máximo", pt = "Alcance Máximo", ko = "최대 범위", ja = "最大範囲", uk = "Макс. дистанція" },
         ["slider_bednuke_packets"] = { ru = "Пакетов за тик", en = "Packets per tick", es = "Paquetes por tick", pt = "Pacotes por tick", ko = "틱당 패킷", ja = "ティックごとのパケット", uk = "Пакетів за тік" },
-        ["toggle_bednuke_bypass"] = { ru = "Античит Байпасс (Полет)", en = "Anti-Cheat Bypass (Fly)", es = "Bypass de Anti-Cheat (Vuelo)", pt = "Bypass de Anti-Cheat (Voo)", ko = "안티치트 우회 (비행)", ja = "アンチチートバイパス (飛行)", uk = "Античіт Байпас (Політ)" },
         ["toggle_killaura_target_esp"] = { ru = "Показывать цель", en = "Show Target", es = "Mostrar Objetivo", pt = "Mostrar Alvo", ko = "대상 표시", ja = "ターゲットを表示", uk = "Показувати ціль" },
         ["tab_home"] = { ru = "🏠 ГЛАВНАЯ", en = "🏠 HOME", es = "🏠 INICIO", pt = "🏠 INÍCIO", ko = "🏠 홈", ja = "🏠 ホーム", uk = "🏠 ГОЛОВНА" },
         ["tab_updates"] = { ru = "📢 ОБНОВЛЕНИЯ", en = "📢 UPDATES", es = "📢 ACTUALIZACIONES", pt = "📢 ATUALIZAÇÕES", ko = "📢 업데이트", ja = "📢 更新", uk = "📢 ОНОВЛЕННЯ" },
