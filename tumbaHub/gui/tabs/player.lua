@@ -38,6 +38,14 @@ UI.CreateToggleWithSettings(TabFrame, "toggle_fly", "Player.Fly", nil, {
 
 UI.CreateToggle(TabFrame, "toggle_inf_jump", "Player.InfiniteJump")
 UI.CreateToggle(TabFrame, "toggle_nofall", "Player.NoFall")
+
+task.spawn(function()
+    pcall(function() Mega.LoadModule("features/antivoid.lua") end)
+end)
+UI.CreateToggle(TabFrame, "toggle_antivoid", "Player.AntiVoid", function(state)
+    Mega.States.Player.AntiVoid = state
+    if Mega.Features.AntiVoid and Mega.Features.AntiVoid.SetEnabled then Mega.Features.AntiVoid.SetEnabled(state) end
+end)
 --#endregion
 
 --#region -- Defense / Utility
@@ -97,7 +105,14 @@ end, {
     UI.CreateSlider(nil, "slider_spinspeed", "Player.SpinSpeed", 1, 100)
 })
 
-UI.CreateToggleWithSettings(TabFrame, "toggle_fastbreak", "Player.FastBreak", nil, {
+task.spawn(function()
+    pcall(function() Mega.LoadModule("features/fastbreak.lua") end)
+end)
+
+UI.CreateToggleWithSettings(TabFrame, "toggle_fastbreak", "Player.FastBreak", function(state)
+    Mega.States.Player.FastBreak = state
+    if Mega.Features.FastBreak and Mega.Features.FastBreak.SetEnabled then Mega.Features.FastBreak.SetEnabled(state) end
+end, {
     UI.CreateSlider(nil, "slider_break_speed", "Player.BreakSpeed", 1, 10)
 })
 --#endregion
