@@ -78,8 +78,6 @@ local bedNukeSettings = {
         Mega.States.Combat.BedNuke.MinRange = val 
     end),
     
-    UI.CreateToggle(nil, "toggle_bednuke_bypass", "Combat.BedNuke.Bypass"),
-    
     -- Задержка (мс) - Скорость ломания
     UI.CreateSlider(nil, "slider_bednuke_delay", "Combat.BedNuke.Delay", 0, 1000, function(val) 
         Mega.States.Combat.BedNuke.Delay = val 
