@@ -1,101 +1,273 @@
--- gui/tabs/combat.lua
--- Content for the "COMBAT" tab
+-- features/bed_nuke.lua
+-- Logic for Bed Nuker
 
-local tabKey = "tab_combat"
-local UI = Mega.UI
+if not Mega.Features then Mega.Features = {} end
+Mega.Features.BedNuke = {}
 
--- Create the container frame for this tab
-local TabFrame = Instance.new("ScrollingFrame")
-TabFrame.Name = tabKey
-TabFrame.Size = UDim2.new(1, 0, 1, 0)
-TabFrame.BackgroundTransparency = 1
-TabFrame.BorderSizePixel = 0
-TabFrame.ScrollBarThickness = 4
-TabFrame.ScrollBarImageColor3 = Mega.Settings.Menu.AccentColor
-TabFrame.Visible = false
-TabFrame.Parent = Mega.Objects.ContentContainer
-
-local ContentLayout = Instance.new("UIListLayout", TabFrame)
-ContentLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-ContentLayout.SortOrder = Enum.SortOrder.LayoutOrder
-ContentLayout.Padding = UDim.new(0, 8)
-
-ContentLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-    TabFrame.CanvasSize = UDim2.new(0, 0, 0, ContentLayout.AbsoluteContentSize.Y + 40)
-end)
-TabFrame.CanvasSize = UDim2.new(0, 0, 0, ContentLayout.AbsoluteContentSize.Y + 40)
-
--- Add this frame to the global list of tab frames
-Mega.Objects.TabFrames[tabKey] = TabFrame
-
---#region -- Automation
-UI.CreateSection(TabFrame, "section_combat_auto")
-
-UI.CreateToggle(TabFrame, "toggle_triggerbot", "Combat.TriggerBot")
-UI.CreateToggle(TabFrame, "toggle_autoshoot", "Combat.AutoShoot")
-UI.CreateToggle(TabFrame, "toggle_rapidfire", "Combat.RapidFire")
---#endregion
-
---#region -- Accuracy
-UI.CreateSection(TabFrame, "section_combat_accuracy")
-
-UI.CreateToggle(TabFrame, "toggle_norecoil", "Combat.NoRecoil")
-UI.CreateToggle(TabFrame, "toggle_nospread", "Combat.NoSpread")
---#endregion
-
---#region -- Killaura
-UI.CreateSection(TabFrame, "section_combat_killaura")
-
-task.spawn(function()
-    pcall(function() Mega.LoadModule("features/killaura.lua") end)
-end)
-
-UI.CreateToggleWithSettings(TabFrame, "toggle_killaura", "Combat.Killaura.Enabled", function(state)
-    Mega.States.Combat.Killaura.Enabled = state
-    if Mega.Features.Killaura and Mega.Features.Killaura.SetEnabled then Mega.Features.Killaura.SetEnabled(state) end
-    if Mega.ShowNotification then
-        Mega.ShowNotification(Mega.GetText("toggle_killaura") .. ": " .. (state and Mega.GetText("notify_enabled") or Mega.GetText("notify_disabled")), 2)
-    end
-end, {
-    UI.CreateToggle(nil, "toggle_killaura_target_esp", "Combat.Killaura.TargetESP"),
-    UI.CreateSlider(nil, "slider_killaura_range", "Combat.Killaura.Range", 5, 100),
-    UI.CreateSlider(nil, "slider_killaura_delay", "Combat.Killaura.Delay", 0, 1000),
-    UI.CreateKeybindButton(nil, "keybind_killaura", "Keybinds.Killaura")
-})
---#endregion
-
---#region -- Bed Nuke
-UI.CreateSection(TabFrame, "section_combat_bednuke")
-
-local bedNukeSettings = {
-    -- Максимальная дистанция
-    UI.CreateSlider(nil, "slider_bednuke_range", "Combat.BedNuke.Range", 5, 50, function(val) 
-        Mega.States.Combat.BedNuke.Range = val 
-    end),
-    
-    -- Минимальная дистанция (чтобы не ломать блоки прямо под собой)
-    UI.CreateSlider(nil, "slider_bednuke_min_range", "Combat.BedNuke.MinRange", 1, 15, function(val) 
-        Mega.States.Combat.BedNuke.MinRange = val 
-    end),
-    
-    -- Задержка (мс) - Скорость ломания
-    UI.CreateSlider(nil, "slider_bednuke_delay", "Combat.BedNuke.Delay", 0, 1000, function(val) 
-        Mega.States.Combat.BedNuke.Delay = val 
-    end),
-    
-    -- Пакетов за тик (мощность нюка)
-    UI.CreateSlider(nil, "slider_bednuke_packets", "Combat.BedNuke.PacketsPerTick", 1, 10, function(val) 
-        Mega.States.Combat.BedNuke.PacketsPerTick = val 
-    end)
+local Services = Mega.Services or {
+    Players = game:GetService("Players"),
+    ReplicatedStorage = game:GetService("ReplicatedStorage"),
+    CollectionService = game:GetService("CollectionService"),
+    RunService = game:GetService("RunService"),
+    CoreGui = game:GetService("CoreGui")
 }
+local LocalPlayer = Services.Players.LocalPlayer
+local States = Mega.States
 
-UI.CreateToggleWithSettings(TabFrame, "toggle_bednuke", Mega.States.Combat.BedNuke.Enabled, function(state)
-    -- Безопасный вызов метода включения/выключения
-    if Mega.Features.BedNuke and Mega.Features.BedNuke.SetEnabled then
-        Mega.Features.BedNuke.SetEnabled(state)
-    else
-        -- Fallback, если модуль еще не прогрузился
-        Mega.States.Combat.BedNuke.Enabled = state
+-- Гарантируем, что настройки существуют
+if not States.Combat then States.Combat = {} end
+if not States.Combat.BedNuke then
+    States.Combat.BedNuke = { Enabled = false, Range = 25, MinRange = 1, PacketsPerTick = 1, Delay = 0 }
+end
+
+if not Mega.Objects.BedNukeConnections then Mega.Objects.BedNukeConnections = {} end
+local connections = Mega.Objects.BedNukeConnections
+
+for k, conn in pairs(connections) do
+    if typeof(conn) == "RBXScriptConnection" then conn:Disconnect() end
+end
+table.clear(connections)
+
+local DamageBlockRemote
+task.spawn(function()
+    pcall(function()
+        DamageBlockRemote = Services.ReplicatedStorage:WaitForChild("rbxts_include", 10)
+            :WaitForChild("node_modules")
+            :WaitForChild("@easy-games")
+            :WaitForChild("block-engine")
+            :WaitForChild("node_modules")
+            :WaitForChild("@rbxts")
+            :WaitForChild("net")
+            :WaitForChild("out")
+            :WaitForChild("_NetManaged")
+            :WaitForChild("DamageBlock")
+    end)
+end)
+
+local vector = vector or {create = function(x, y, z) return Vector3.new(x, y, z) end}
+local lastCheck = 0
+local lastBreakTime = 0
+
+local espFolder = Services.CoreGui:FindFirstChild("BedNukeESP")
+if not espFolder then
+    espFolder = Instance.new("Folder")
+    espFolder.Name = "BedNukeESP"
+    espFolder.Parent = Services.CoreGui
+end
+
+local espPool = {}
+
+local function ClearESP()
+    for _, box in ipairs(espPool) do
+        if box.Visible then
+            box.Visible = false
+        end
     end
-end, bedNukeSettings)
---#endregion
+end
+
+local function DrawESP(blocks)
+    for i, bPos in ipairs(blocks) do
+        local box = espPool[i]
+        if not box then
+            box = Instance.new("BoxHandleAdornment")
+            box.Size = Vector3.new(3.1, 3.1, 3.1)
+            box.AlwaysOnTop = true
+            box.ZIndex = 5
+            box.Transparency = 0.5
+            box.Color3 = Color3.fromRGB(255, 50, 50)
+            box.Adornee = game.Workspace.Terrain -- Привязываем к террейну
+            box.Parent = espFolder
+            espPool[i] = box
+        end
+        box.CFrame = CFrame.new(bPos * 3)
+        box.Visible = true
+    end
+    
+    -- Скрываем остальные, которые не используются в этом кадре
+    for i = #blocks + 1, #espPool do
+        if espPool[i].Visible then
+            espPool[i].Visible = false
+        end
+    end
+end
+
+local function GetBlocksToBreak(hrpPos, bedPart, bedsList)
+    local blocksList = {}
+    local seen = {}
+    local bedPos = bedPart.Position
+    
+    local dir = (bedPos - hrpPos).Unit
+    local dist = (bedPos - hrpPos).Magnitude
+    
+    local overlap = OverlapParams.new()
+    overlap.FilterType = Enum.RaycastFilterType.Whitelist
+    local whitelist = {}
+    
+    -- Ищем папку с блоками на карте
+    local blocksFolder = game.Workspace:FindFirstChild("Map") and game.Workspace.Map:FindFirstChild("Blocks") or game.Workspace:FindFirstChild("Blocks")
+    if blocksFolder then table.insert(whitelist, blocksFolder) end
+    
+    -- Добавляем в whitelist все кровати
+    for _, b in ipairs(bedsList) do
+        if b then table.insert(whitelist, b) end
+    end
+    overlap.FilterDescendantsInstances = whitelist
+
+    -- Построение маршрута (в линию)
+    for i = 0, dist, 1.5 do
+        local point = hrpPos + dir * i
+        
+        -- Ограничение: на уровне OY кровати и выше
+        if point.Y >= (bedPos.Y - 1.5) then
+            local bPos = Vector3.new(
+                math.round(point.X / 3),
+                math.round(point.Y / 3),
+                math.round(point.Z / 3)
+            )
+            
+            local key = bPos.X .. "," .. bPos.Y .. "," .. bPos.Z
+            if not seen[key] then
+                seen[key] = true
+                
+                local realPos = bPos * 3
+                local parts = game.Workspace:GetPartBoundsInBox(CFrame.new(realPos), Vector3.new(2.5, 2.5, 2.5), overlap)
+                local hasTarget = false
+                for _, p in ipairs(parts) do
+                    if p.CanCollide or p.Name:lower():find("bed") then
+                        hasTarget = true
+                        break
+                    end
+                end
+                
+                if hasTarget then
+                    table.insert(blocksList, bPos)
+                end
+            end
+        end
+    end
+    
+    -- Всегда добавляем кровать
+    local bedBPos = Vector3.new(
+        math.round(bedPos.X / 3),
+        math.round(bedPos.Y / 3),
+        math.round(bedPos.Z / 3)
+    )
+    local bedKey = bedBPos.X .. "," .. bedBPos.Y .. "," .. bedBPos.Z
+    if not seen[bedKey] then
+        table.insert(blocksList, bedBPos)
+    end
+    
+    return blocksList
+end
+
+local function BedNukeLoop()
+    if not States.Combat.BedNuke.Enabled or not DamageBlockRemote then 
+        ClearESP()
+        return 
+    end
+    
+    -- Троттлинг
+    if tick() - lastCheck < 0.05 then return end
+    lastCheck = tick()
+
+    local char = LocalPlayer.Character
+    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+
+    local myTeamId = LocalPlayer:GetAttribute("Team")
+    local beds = Services.CollectionService:GetTagged("bed")
+    local closestBed = nil
+    local closestDist = States.Combat.BedNuke.Range
+    local minAllowedDist = States.Combat.BedNuke.MinRange or 1
+
+    for _, bed in ipairs(beds) do
+        if bed:IsA("BasePart") or bed:IsA("Model") then
+            local bedPart = bed:IsA("BasePart") and bed or bed.PrimaryPart
+            if bedPart then
+                local bedTeamId = bed:GetAttribute("TeamId") or bed:GetAttribute("Team")
+                local health = bed:GetAttribute("Health")
+                
+                if bedTeamId ~= myTeamId and (not health or health > 0) then
+                    local dist = (bedPart.Position - hrp.Position).Magnitude
+                    if dist <= closestDist and dist >= minAllowedDist then
+                        closestDist = dist
+                        closestBed = bed
+                    end
+                end
+            end
+        end
+    end
+
+    if closestBed then
+        local bedPart = closestBed:IsA("BasePart") and closestBed or closestBed.PrimaryPart
+        if not bedPart then 
+            ClearESP()
+            return 
+        end
+
+        -- Вычисляем оптимальный прямой маршрут до кровати
+        local blocksToBreak = GetBlocksToBreak(hrp.Position, bedPart, beds)
+        
+        -- Рендер ESP (красных блоков)
+        DrawESP(blocksToBreak)
+        
+        local delayMs = States.Combat.BedNuke.Delay or 0
+        local delaySec = delayMs / 1000
+
+        if #blocksToBreak > 0 and (tick() - lastBreakTime >= delaySec) then
+            local packetsFired = 0
+            
+            for _, blockPos in ipairs(blocksToBreak) do
+                if packetsFired >= States.Combat.BedNuke.PacketsPerTick then break end
+                
+                local posArg = vector.create(blockPos.X, blockPos.Y, blockPos.Z)
+                local hitPosArg = vector.create(blockPos.X * 3, blockPos.Y * 3, blockPos.Z * 3)
+                
+                local args = {
+                    {
+                        ["blockRef"] = {
+                            ["blockPosition"] = posArg
+                        },
+                        ["hitPosition"] = hitPosArg,
+                        ["hitNormal"] = vector.create(0, 1, 0)
+                    }
+                }
+                
+                task.spawn(function()
+                    pcall(function()
+                        if DamageBlockRemote:IsA("RemoteEvent") then
+                            DamageBlockRemote:FireServer(unpack(args))
+                        elseif DamageBlockRemote:IsA("RemoteFunction") then
+                            DamageBlockRemote:InvokeServer(unpack(args))
+                        end
+                    end)
+                end)
+                
+                packetsFired = packetsFired + 1
+            end
+            
+            lastBreakTime = tick()
+        end
+    else
+        ClearESP()
+    end
+end
+
+function Mega.Features.BedNuke.SetEnabled(state)
+    States.Combat.BedNuke.Enabled = state
+    if state then
+        if not connections.BedNukeLoop then
+            connections.BedNukeLoop = Services.RunService.Heartbeat:Connect(BedNukeLoop)
+        end
+    else
+        if connections.BedNukeLoop then
+            connections.BedNukeLoop:Disconnect()
+            connections.BedNukeLoop = nil
+        end
+        ClearESP()
+    end
+end
+
+if States.Combat.BedNuke.Enabled then
+    Mega.Features.BedNuke.SetEnabled(true)
+end
