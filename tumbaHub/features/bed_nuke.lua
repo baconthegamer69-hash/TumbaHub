@@ -231,7 +231,7 @@ local function BedNukeLoop()
                         bv.Velocity = Vector3.new(0, 50, 0) -- Скорость подъема (например, 50 стадов/сек)
                         bv.Parent = hrp
                         
-                        task.wait(0.4) -- Сколько секунд летим вверх
+                        task.wait(3) -- Сколько секунд летим вверх
                         if bv.Parent then bv.Velocity = Vector3.new(0, 0, 0) end
                         
                         task.wait(0.5)
