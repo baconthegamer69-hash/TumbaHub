@@ -119,6 +119,16 @@ Mega.States = {
             Predict = 0.15
         }
     },
+    Bot = {
+        Enabled = false,
+        TargetBeds = true,
+        TargetPlayers = true,
+        Pathfinding = true,
+        AutoKillaura = true,
+        AutoScaffold = true,
+        AutoBedNuke = true,
+        AutoAntiVoid = true
+    },
     Combat = {
         TriggerBot = false,
         AutoShoot = false,
