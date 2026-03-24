@@ -13,7 +13,13 @@ local LocalPlayer = Services.Players.LocalPlayer
 local States = Mega.States
 
 if not States.Player then States.Player = {} end
-if States.Player.AntiVoid == nil then States.Player.AntiVoid = false end
+if type(States.Player.AntiVoid) ~= "table" then
+    local oldState = type(States.Player.AntiVoid) == "boolean" and States.Player.AntiVoid or false
+    States.Player.AntiVoid = { Enabled = oldState, YLevel = 29, ESP = false, ESPTransparency = 0.5 }
+end
+if States.Player.AntiVoid.YLevel == nil then States.Player.AntiVoid.YLevel = 29 end
+if States.Player.AntiVoid.ESP == nil then States.Player.AntiVoid.ESP = false end
+if States.Player.AntiVoid.ESPTransparency == nil then States.Player.AntiVoid.ESPTransparency = 0.5 end
 
 if not Mega.Objects.AntiVoidConnections then Mega.Objects.AntiVoidConnections = {} end
 local connections = Mega.Objects.AntiVoidConnections
@@ -23,19 +29,50 @@ for k, conn in pairs(connections) do
 end
 table.clear(connections)
 
+local espPart = nil
+
+function Mega.Features.AntiVoid.UpdateESP()
+    if not States.Player.AntiVoid.Enabled or not States.Player.AntiVoid.ESP then
+        if espPart then
+            espPart:Destroy()
+            espPart = nil
+        end
+        return
+    end
+
+    if not espPart then
+        espPart = Instance.new("Part")
+        espPart.Name = "AntiVoidESP"
+        espPart.Anchored = true
+        espPart.CanCollide = false
+        espPart.Size = Vector3.new(2048, 2, 2048)
+        espPart.Material = Enum.Material.ForceField
+        espPart.Color = Color3.fromRGB(255, 50, 50)
+        espPart.CastShadow = false
+        espPart.Parent = Services.Workspace
+    end
+    
+    espPart.Transparency = States.Player.AntiVoid.ESPTransparency
+end
+
 function Mega.Features.AntiVoid.SetEnabled(state)
-    States.Player.AntiVoid = state
+    States.Player.AntiVoid.Enabled = state
+    Mega.Features.AntiVoid.UpdateESP()
     
     if state then
         connections.AntiVoidLoop = Services.RunService.Heartbeat:Connect(function()
-            if not States.Player.AntiVoid then return end
+            if not States.Player.AntiVoid.Enabled then return end
             local char = LocalPlayer.Character
-            if not char then return end
-            local hrp = char:FindFirstChild("HumanoidRootPart")
-            local hum = char:FindFirstChild("Humanoid")
+            local hrp = char and char:FindFirstChild("HumanoidRootPart")
+            local hum = char and char:FindFirstChild("Humanoid")
+            
+            if espPart and hrp then
+                espPart.Position = Vector3.new(hrp.Position.X, States.Player.AntiVoid.YLevel, hrp.Position.Z)
+            end
+            
             if not hrp or not hum then return end
             
-            if hrp.Position.Y < 29 then
+            if hrp.Position.Y < States.Player.AntiVoid.YLevel then
                 local bv = hrp:FindFirstChild("AntiVoidBV")
                 if not bv then
                     bv = Instance.new("BodyVelocity")
@@ -66,9 +103,10 @@ function Mega.Features.AntiVoid.SetEnabled(state)
         if hrp and hrp:FindFirstChild("AntiVoidBV") then
             hrp.AntiVoidBV:Destroy()
         end
+        Mega.Features.AntiVoid.UpdateESP()
     end
 end
 
-if States.Player.AntiVoid then
+if type(States.Player.AntiVoid) == "table" and States.Player.AntiVoid.Enabled then
     Mega.Features.AntiVoid.SetEnabled(true)
 end
