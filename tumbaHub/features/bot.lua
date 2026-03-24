@@ -1,4 +1,4 @@
--- features/bot.lua
+    -- features/bot.lua
 -- Logic for Auto-Bot (Pathfinding, Target tracking, Auto-modules)
 
 if not Mega.Features then Mega.Features = {} end
@@ -18,7 +18,7 @@ if not States.Bot then
     States.Bot = {
         Enabled = false, TargetBeds = true, TargetPlayers = true,
         Pathfinding = true, AutoKillaura = true, AutoScaffold = true, 
-        AutoBedNuke = true, AutoAntiVoid = true
+        AutoBedNuke = true, AutoAntiVoid = true, AutoSpider = true
     }
 end
 
@@ -114,12 +114,14 @@ function Mega.Features.Bot.SetEnabled(state)
         prevModuleStates.Scaffold = States.Player.Scaffold and States.Player.Scaffold.Enabled
         prevModuleStates.BedNuke = States.Combat.BedNuke and States.Combat.BedNuke.Enabled
         prevModuleStates.AntiVoid = States.Player.AntiVoid and (type(States.Player.AntiVoid) == "table" and States.Player.AntiVoid.Enabled or States.Player.AntiVoid)
+        prevModuleStates.Spider = States.Player.Spider
 
         -- Включаем нужные модули (если разрешено и если не были включены до этого)
         if States.Bot.AutoKillaura and Mega.Features.Killaura and not prevModuleStates.Killaura then Mega.Features.Killaura.SetEnabled(true) end
         if States.Bot.AutoScaffold and Mega.Features.Scaffold and not prevModuleStates.Scaffold then Mega.Features.Scaffold.SetEnabled(true) end
         if States.Bot.AutoBedNuke and Mega.Features.BedNuke and not prevModuleStates.BedNuke then Mega.Features.BedNuke.SetEnabled(true) end
         if States.Bot.AutoAntiVoid and Mega.Features.AntiVoid and not prevModuleStates.AntiVoid then Mega.Features.AntiVoid.SetEnabled(true) end
+        if States.Bot.AutoSpider and Mega.Features.Spider and not prevModuleStates.Spider then Mega.Features.Spider.SetEnabled(true) end
 
         connections.BotLoop = Services.RunService.Heartbeat:Connect(function()
             if not States.Bot.Enabled then return end
@@ -211,6 +213,10 @@ function Mega.Features.Bot.SetEnabled(state)
         if States.Bot.AutoAntiVoid and Mega.Features.AntiVoid and not prevModuleStates.AntiVoid then 
             Mega.Features.AntiVoid.SetEnabled(false) 
             if Mega.Objects.Toggles["toggle_antivoid"] then Mega.Objects.Toggles["toggle_antivoid"](false) end
+        end
+        if States.Bot.AutoSpider and Mega.Features.Spider and not prevModuleStates.Spider then 
+            Mega.Features.Spider.SetEnabled(false) 
+            if Mega.Objects.Toggles["toggle_spider"] then Mega.Objects.Toggles["toggle_spider"](false) end
         end
     end
 end
