@@ -185,6 +185,7 @@ Mega.Localization = {
         ["toggle_antiknockback"] = { ru = "Анти-отбрасывание", en = "Anti-Knockback", es = "Anti-Retroceso", pt = "Anti-Recuo", ko = "넉백 방지", ja = "ノックバック無効", uk = "Анти-відкидання" },
         ["slider_knockback_strength"] = { ru = "Сила отбрасывания", en = "Knockback Strength", es = "Fuerza de Retroceso", pt = "Força de Recuo", ko = "넉백 강도", ja = "ノックバック強度", uk = "Сила відкидання" },
         ["toggle_nofall"] = { ru = "Анти-урон от падения BETA", en = "No Fall Damage BETA", es = "Sin Daño por Caída BETA", pt = "Sem Dano de Queda BETA", ko = "낙하 피해 없음 BETA", ja = "落下ダメージなし BETA", uk = "Анти-шкода від падіння BETA" },
+        ["toggle_antivoid"] = { ru = "Анти-Войд (Левитация)", en = "Anti-Void (Hover)", es = "Anti-Vacío (Vuelo)", pt = "Anti-Vazio (Voo)", ko = "안티 보이드 (부유)", ja = "アンチボイド (ホバー)", uk = "Анти-Войд (Левітація)" },
         ["toggle_spider"] = { ru = "Спайдер (Spider)", en = "Spider", es = "Araña", pt = "Aranha", ko = "거미", ja = "スパイダー", uk = "Павук (Spider)" },
         ["dropdown_spider_mode"] = { ru = "Режим Спайдера", en = "Spider Mode", es = "Modo Araña", pt = "Modo Aranha", ko = "거미 모드", ja = "スパイダーモード", uk = "Режим Павука" },
         ["slider_spider_speed"] = { ru = "Скорость Спайдера", en = "Spider Speed", es = "Velocidad de Araña", pt = "Velocidade da Aranha", ko = "거미 속도", ja = "スパイダー速度", uk = "Швидкість Павука" },
