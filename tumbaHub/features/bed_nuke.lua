@@ -213,6 +213,8 @@ local function BedNukeLoop()
         
         local delayMs = States.Combat.BedNuke.Delay or 0
         local delaySec = delayMs / 1000
+        -- Ограничиваем минимальную задержку, чтобы античит не блокировал урон
+        if delaySec < 0.05 then delaySec = 0.05 end
 
         if #blocksToBreak > 0 and (tick() - lastBreakTime >= delaySec) then
             local packetsFired = 0
@@ -220,8 +222,29 @@ local function BedNukeLoop()
             for _, blockPos in ipairs(blocksToBreak) do
                 if packetsFired >= States.Combat.BedNuke.PacketsPerTick then break end
                 
+                local realPos = blockPos * 3
+                local diff = hrp.Position - realPos
+                
+                -- Динамически вычисляем открытую грань блока (смотрящую на игрока)
+                local normX, normY, normZ = 0, 1, 0
+                local absX, absY, absZ = math.abs(diff.X), math.abs(diff.Y), math.abs(diff.Z)
+                if absX > absY and absX > absZ then
+                    normX = diff.X > 0 and 1 or -1
+                    normY, normZ = 0, 0
+                elseif absY > absX and absY > absZ then
+                    normY = diff.Y > 0 and 1 or -1
+                    normX, normZ = 0, 0
+                else
+                    normZ = diff.Z > 0 and 1 or -1
+                    normX, normY = 0, 0
+                end
+
                 local posArg = vector.create(blockPos.X, blockPos.Y, blockPos.Z)
-                local hitPosArg = vector.create(blockPos.X * 3, blockPos.Y * 3, blockPos.Z * 3)
+                local hitPosArg = vector.create(
+                    realPos.X + (normX * 1.5),
+                    realPos.Y + (normY * 1.5),
+                    realPos.Z + (normZ * 1.5)
+                )
                 
                 local args = {
                     {
@@ -229,7 +252,7 @@ local function BedNukeLoop()
                             ["blockPosition"] = posArg
                         },
                         ["hitPosition"] = hitPosArg,
-                        ["hitNormal"] = vector.create(0, 1, 0)
+                        ["hitNormal"] = vector.create(normX, normY, normZ)
                     }
                 }
                 
