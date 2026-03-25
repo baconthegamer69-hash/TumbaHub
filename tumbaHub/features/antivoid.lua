@@ -15,9 +15,10 @@ local States = Mega.States
 
 if not States.Player then States.Player = {} end
 if not States.Player.AntiVoid then
-    States.Player.AntiVoid = { Enabled = false, AutoCalc = true, YLevel = 20, ESP = false, ESPTransparency = 0.5 }
-elseif States.Player.AntiVoid.AutoCalc == nil then
-    States.Player.AntiVoid.AutoCalc = true
+    States.Player.AntiVoid = { Enabled = false, AutoCalc = true, AutoCalcOffset = 9, YLevel = 20, ESP = false, ESPTransparency = 0.5 }
+else
+    if States.Player.AntiVoid.AutoCalc == nil then States.Player.AntiVoid.AutoCalc = true end
+    if States.Player.AntiVoid.AutoCalcOffset == nil then States.Player.AntiVoid.AutoCalcOffset = 9 end
 end
 
 if not Mega.Objects.AntiVoidConnections then Mega.Objects.AntiVoidConnections = {} end
@@ -95,9 +96,10 @@ function Mega.Features.AntiVoid.SetEnabled(state)
                     end
                 end
                 
-                -- Обновляем уровень, отступая 9 стадов от кровати
+                -- Обновляем уровень, отступая заданное количество стадов от кровати
                 if bedY then
-                    local newY = math.floor(bedY - 9)
+                    local offset = States.Player.AntiVoid.AutoCalcOffset or 9
+                    local newY = math.floor(bedY - offset)
                     if States.Player.AntiVoid.YLevel ~= newY then
                         States.Player.AntiVoid.YLevel = newY
                         
