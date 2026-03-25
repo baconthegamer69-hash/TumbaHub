@@ -134,6 +134,36 @@ end, {
 })
 --#endregion
 
+local antiVoidSettings = {
+    -- Тот самый переключатель для авто-расчета 9 стадов вниз
+    CreateToggle(nil, "toggle_antivoid_autocalc", Mega.States.Player.AntiVoid.AutoCalc, function(state) 
+        if Mega.Features.AntiVoid and Mega.Features.AntiVoid.SetAutoCalc then 
+            Mega.Features.AntiVoid.SetAutoCalc(state) 
+        end 
+    end),
+    
+    -- Ручной ползунок (он игнорируется алгоритмом, если включен авто-расчет)
+    CreateSlider(nil, "slider_antivoid_ylevel", -100, 100, Mega.States.Player.AntiVoid.YLevel, function(val) 
+        Mega.States.Player.AntiVoid.YLevel = val 
+    end),
+    
+    CreateToggle(nil, "toggle_antivoid_esp", Mega.States.Player.AntiVoid.ESP, function(state) 
+        Mega.States.Player.AntiVoid.ESP = state
+        if Mega.Features.AntiVoid and Mega.Features.AntiVoid.UpdateESP then Mega.Features.AntiVoid.UpdateESP() end 
+    end),
+    
+    CreateSlider(nil, "slider_antivoid_esp_transparency", 0, 100, Mega.States.Player.AntiVoid.ESPTransparency * 100, function(val) 
+        Mega.States.Player.AntiVoid.ESPTransparency = val / 100
+        if Mega.Features.AntiVoid and Mega.Features.AntiVoid.UpdateESP then Mega.Features.AntiVoid.UpdateESP() end 
+    end)
+}
+
+CreateToggleWithSettings(PlayerFrame, "toggle_bot_antivoid", Mega.States.Player.AntiVoid.Enabled, function(state)
+    Mega.States.Player.AntiVoid.Enabled = state
+    if Mega.Features.AntiVoid and Mega.Features.AntiVoid.SetEnabled then 
+        Mega.Features.AntiVoid.SetEnabled(state) 
+    end
+end, antiVoidSettings)
 
 -- Simple player logic that can live here
 local function onRenderStep()
