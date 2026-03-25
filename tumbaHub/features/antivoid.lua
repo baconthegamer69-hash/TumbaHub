@@ -29,6 +29,7 @@ end
 table.clear(connections)
 
 local espPart = nil
+local lastCalc = 0
 
 function Mega.Features.AntiVoid.UpdateESP()
     if States.Player.AntiVoid.Enabled and States.Player.AntiVoid.ESP then
@@ -52,7 +53,11 @@ function Mega.Features.AntiVoid.UpdateESP()
     end
 end
 
-local lastCalc = 0
+function Mega.Features.AntiVoid.SetAutoCalc(state)
+    States.Player.AntiVoid.AutoCalc = state
+    if state then lastCalc = 0 end -- Сбрасываем таймер для мгновенного расчета при включении
+end
+
 function Mega.Features.AntiVoid.SetEnabled(state)
     States.Player.AntiVoid.Enabled = state
     
