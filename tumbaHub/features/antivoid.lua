@@ -97,7 +97,30 @@ function Mega.Features.AntiVoid.SetEnabled(state)
                 
                 -- Обновляем уровень, отступая 9 стадов от кровати
                 if bedY then
-                    States.Player.AntiVoid.YLevel = bedY - 9
+                    local newY = math.floor(bedY - 9)
+                    if States.Player.AntiVoid.YLevel ~= newY then
+                        States.Player.AntiVoid.YLevel = newY
+                        
+                        -- Визуально обновляем ползунок в интерфейсе
+                        local gui = Mega.Objects.GUI
+                        if gui then
+                            local slider = gui:FindFirstChild("slider_antivoid_ylevelSlider", true)
+                            if slider then
+                                local label = slider:FindFirstChild("Label")
+                                local track = slider:FindFirstChild("Track")
+                                if label and track then
+                                    local fill = track:FindFirstChild("Fill")
+                                    local btn = track:FindFirstChild("Button")
+                                    local ratio = math.clamp((newY - (-100)) / (100 - (-100)), 0, 1)
+                                    if fill then fill.Size = UDim2.new(ratio, 0, 1, 0) end
+                                    if btn then btn.Position = UDim2.new(ratio, -8, 0.5, -8) end
+                                    
+                                    local baseText = label.Text:match("^(.-):")
+                                    if baseText then label.Text = baseText .. ": " .. tostring(newY) end
+                                end
+                            end
+                        end
+                    end
                 end
             end
 
