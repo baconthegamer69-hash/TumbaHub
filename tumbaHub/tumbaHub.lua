@@ -92,7 +92,6 @@ Mega.LoadModule("features/chest_steal.lua")
 Mega.LoadModule("features/auto_deposit.lua")
 Mega.LoadModule("features/killaura.lua")
 Mega.LoadModule("features/bed_nuke.lua")
-Mega.LoadModule("features/adetunde.lua")
 Mega.LoadModule("features/bot.lua")
 
 -- Load the main GUI
