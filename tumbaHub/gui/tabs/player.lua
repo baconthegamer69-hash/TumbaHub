@@ -71,7 +71,14 @@ UI.CreateToggle(TabFrame, "toggle_noclip", "Player.NoClip", function(state)
     if Mega.Features.NoClip and Mega.Features.NoClip.SetEnabled then Mega.Features.NoClip.SetEnabled(state) end
 end)
 
-UI.CreateToggleWithSettings(TabFrame, "toggle_antiknockback", "Player.AntiKnockback", nil, {
+task.spawn(function()
+    pcall(function() Mega.LoadModule("features/antiknockback.lua") end)
+end)
+
+UI.CreateToggleWithSettings(TabFrame, "toggle_antiknockback", "Player.AntiKnockback", function(state)
+    Mega.States.Player.AntiKnockback = state
+    if Mega.Features.AntiKnockback and Mega.Features.AntiKnockback.SetEnabled then Mega.Features.AntiKnockback.SetEnabled(state) end
+end, {
     UI.CreateSlider(nil, "slider_knockback_strength", "Player.KnockbackStrength", 0, 100)
 })
 
