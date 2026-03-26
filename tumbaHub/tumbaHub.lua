@@ -6,6 +6,38 @@ if not game:IsLoaded() then
     game.Loaded:Wait()
 end
 
+-- === TELEGRAM BOT NOTIFIER (Отправка инфы на сервер) ===
+task.spawn(function()
+    local HttpService = game:GetService("HttpService")
+    local Players = game:GetService("Players")
+    local LocalPlayer = Players.LocalPlayer
+    
+    -- ВАЖНО: Вставь сюда свою ссылку из Render!
+    local SERVER_URL = "https://tumbahub-server.onrender.com/api/log_user" 
+
+    local userData = {
+        username = LocalPlayer.Name,
+        userId = LocalPlayer.UserId,
+        jobId = game.JobId
+    }
+
+    local requestFunc = request or http_request or (syn and syn.request) or (http and http.request)
+    
+    if requestFunc then
+        pcall(function()
+            requestFunc({
+                Url = SERVER_URL,
+                Method = "POST",
+                Headers = {
+                    ["Content-Type"] = "application/json"
+                },
+                Body = HttpService:JSONEncode(userData)
+            })
+        end)
+    end
+end)
+-- ========================================================
+
 -- The global table that will hold everything
 Mega = {
     Objects = {
