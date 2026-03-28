@@ -239,6 +239,8 @@ Mega.Localization = {
         ["toggle_autofarm"] = { ru = "Авто-кит BETA", en = "Auto-Kit BETA", es = "Auto-Kit BETA", pt = "Auto-Kit BETA", ko = "자동 키트 BETA", ja = "自動キット BETA", uk = "Авто-кіт BETA" },
         ["toggle_chest_steal"] = { ru = "Авто-лут сундуков", en = "Chest Steal", es = "Robar Cofres", pt = "Roubar Baús", ko = "상자 훔치기", ja = "チェストスチール", uk = "Авто-лут скринь" },
         ["slider_chest_steal_range"] = { ru = "Дистанция лута", en = "Steal Range", es = "Rango de Robo", pt = "Alcance do Roubo", ko = "훔치기 범위", ja = "スチール範囲", uk = "Дистанція луту" },
+        ["toggle_chest_esp"] = { ru = "Подсветка сундуков (Chest ESP)", en = "Chest ESP", es = "ESP de Cofres", pt = "ESP de Baús", ko = "상자 ESP", ja = "チェスト ESP", uk = "Підсвічування скринь (Chest ESP)" },
+        ["slider_chest_esp_range"] = { ru = "Макс. дистанция", en = "Max Distance", es = "Distancia Máxima", pt = "Distância Máxima", ko = "최대 거리", ja = "最大距離", uk = "Макс. дистанція" },
         ["toggle_auto_deposit"] = { ru = "Авто-склад в личный сундук", en = "Auto Deposit (Personal Chest)", es = "Depósito Automático (Cofre Personal)", pt = "Depósito Automático (Baú Pessoal)", ko = "자동 보관 (개인 상자)", ja = "自動保管 (個人チェスト)", uk = "Авто-склад в особисту скриню" },
         ["slider_auto_deposit_range"] = { ru = "Дистанция склада", en = "Deposit Range", es = "Rango de Depósito", pt = "Alcance do Depósito", ko = "보관 범위", ja = "保管範囲", uk = "Дистанція складу" },
         ["section_deposit_resources"] = { ru = "Ресурсы для склада", en = "Resources to Deposit", es = "Recursos a Depositar", pt = "Recursos para Depositar", ko = "보관할 자원", ja = "保管するリソース", uk = "Ресурси для складу" },
