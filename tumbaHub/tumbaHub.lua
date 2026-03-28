@@ -118,5 +118,5 @@ if queue_on_teleport then
             end
     ]]
     queue_on_teleport(teleportCode)
-    print("🔄 Auto-Inject (Queue on Teleport) is active")
+    print("🔄 Auto-Inject (Queue on Teleport) is active 67 67")
 end
