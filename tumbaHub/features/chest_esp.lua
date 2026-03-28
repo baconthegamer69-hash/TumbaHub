@@ -15,7 +15,6 @@ local Services = Mega.Services or {
 local LocalPlayer = Services.Players.LocalPlayer
 local States = Mega.States
 
--- Убеждаемся, что стейты существуют
 if not States.Misc then States.Misc = {} end
 if not States.Misc.ChestESP then
     States.Misc.ChestESP = { Enabled = false, MaxDistance = 300 }
@@ -34,7 +33,6 @@ pcall(function()
     ItemMeta = require(Services.ReplicatedStorage.TS.item["item-meta"]).items
 end)
 
--- Очищаем старые версии ESP на случай перезапуска
 for _, name in ipairs({"TumbaChestESP", "TumbaChestESP_V2", "TumbaChestESP_V3", "TumbaChestESP_V4", "TumbaChestESP_V5"}) do
     local old = Services.CoreGui:FindFirstChild(name)
     if old then old:Destroy() end
@@ -103,148 +101,148 @@ local function StartESP()
                         gui.MaxDistance = maxDist
                         
                         local mainFrame = Instance.new("Frame", gui)
-                    mainFrame.Name = "MainFrame"
-                    mainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
-                    mainFrame.BackgroundTransparency = 0.25
-                    mainFrame.Size = UDim2.new(1, 0, 0, 0)
-                    mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-                    mainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
-                    mainFrame.AutomaticSize = Enum.AutomaticSize.Y
-                    Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 6)
-                    
-                    local uiScale = Instance.new("UIScale", mainFrame)
-                    uiScale.Name = "UIScale"
-                    
-                    local stroke = Instance.new("UIStroke", mainFrame)
-                    stroke.Color = Color3.fromRGB(50, 50, 60)
-                    stroke.Thickness = 1.5
-                    stroke.Transparency = 0.3
-                    
-                    local listFrame = Instance.new("Frame", mainFrame)
-                    listFrame.Name = "ListFrame"
-                    listFrame.BackgroundTransparency = 1
-                    listFrame.Size = UDim2.new(1, 0, 0, 0)
-                    listFrame.AutomaticSize = Enum.AutomaticSize.Y
-                    
-                    local layout = Instance.new("UIListLayout", listFrame)
-                    layout.SortOrder = Enum.SortOrder.LayoutOrder
-                    layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-                    layout.VerticalAlignment = Enum.VerticalAlignment.Center
-                    layout.Padding = UDim.new(0, 3)
-                    Instance.new("UIPadding", listFrame).PaddingBottom = UDim.new(0, 5)
-                    Instance.new("UIPadding", listFrame).PaddingTop = UDim.new(0, 5)
+                        mainFrame.Name = "MainFrame"
+                        mainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+                        mainFrame.BackgroundTransparency = 0.25
+                        mainFrame.Size = UDim2.new(1, 0, 0, 0)
+                        mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+                        mainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+                        mainFrame.AutomaticSize = Enum.AutomaticSize.Y
+                        Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 6)
+                        
+                        local uiScale = Instance.new("UIScale", mainFrame)
+                        uiScale.Name = "UIScale"
+                        
+                        local stroke = Instance.new("UIStroke", mainFrame)
+                        stroke.Color = Color3.fromRGB(50, 50, 60)
+                        stroke.Thickness = 1.5
+                        stroke.Transparency = 0.3
+                        
+                        local listFrame = Instance.new("Frame", mainFrame)
+                        listFrame.Name = "ListFrame"
+                        listFrame.BackgroundTransparency = 1
+                        listFrame.Size = UDim2.new(1, 0, 0, 0)
+                        listFrame.AutomaticSize = Enum.AutomaticSize.Y
+                        
+                        local layout = Instance.new("UIListLayout", listFrame)
+                        layout.SortOrder = Enum.SortOrder.LayoutOrder
+                        layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+                        layout.VerticalAlignment = Enum.VerticalAlignment.Center
+                        layout.Padding = UDim.new(0, 3)
+                        Instance.new("UIPadding", listFrame).PaddingBottom = UDim.new(0, 5)
+                        Instance.new("UIPadding", listFrame).PaddingTop = UDim.new(0, 5)
 
-                    gui.Parent = espFolder
-                    gui.Adornee = chest
-                    chestGuis[chest] = gui
-                end
-                
-                gui.MaxDistance = maxDist
-                
-                local mainFrame = gui:FindFirstChild("MainFrame")
-                local listFrame = mainFrame and mainFrame:FindFirstChild("ListFrame")
-                local uiScale = mainFrame and mainFrame:FindFirstChild("UIScale")
-                
-                if uiScale then
-                    local scaleFactor = math.clamp(1 - (dist / 350), 0.35, 1)
-                    uiScale.Scale = scaleFactor
-                end
-                
-                if itemsFolder and listFrame then
-                    for _, child in pairs(listFrame:GetChildren()) do
-                        if child:IsA("Frame") or child:IsA("TextLabel") then child:Destroy() end
+                        gui.Parent = espFolder
+                        gui.Adornee = chest
+                        chestGuis[chest] = gui
                     end
                     
-                    local contents = itemsFolder:GetChildren()
-                    if #contents > 0 then
-                        local itemCounts = {}
-                        for _, item in pairs(contents) do
-                            if item:IsA("Accessory") or item:IsA("Tool") then
-                                local amount = item:GetAttribute("Amount")
-                                if not amount and item:FindFirstChild("Amount") then amount = item.Amount.Value end
-                                amount = amount or 1
-                                itemCounts[item.Name] = (itemCounts[item.Name] or 0) + amount
-                            end
+                    gui.MaxDistance = maxDist
+                    
+                    local mainFrame = gui:FindFirstChild("MainFrame")
+                    local listFrame = mainFrame and mainFrame:FindFirstChild("ListFrame")
+                    local uiScale = mainFrame and mainFrame:FindFirstChild("UIScale")
+                    
+                    if uiScale then
+                        local scaleFactor = math.clamp(1 - (dist / 350), 0.35, 1)
+                        uiScale.Scale = scaleFactor
+                    end
+                    
+                    if itemsFolder and listFrame then
+                        for _, child in pairs(listFrame:GetChildren()) do
+                            if child:IsA("Frame") or child:IsA("TextLabel") then child:Destroy() end
                         end
                         
-                        local sortedItems = {}
-                        for name, count in pairs(itemCounts) do
-                            local clName, color, image, weight = formatItem(name)
-                            table.insert(sortedItems, {rawName = name, cleanName = clName, count = count, color = color, image = image, weight = weight})
-                        end
-                        
-                        table.sort(sortedItems, function(a, b) return a.weight > b.weight end)
-                        
-                        for i, data in ipairs(sortedItems) do
-                            local itemContainer = Instance.new("Frame")
-                            itemContainer.BackgroundTransparency = 1
-                            itemContainer.Size = UDim2.new(1, 0, 0, 18)
-                            itemContainer.LayoutOrder = i
-                            itemContainer.Parent = listFrame
-                            
-                            local hLayout = Instance.new("UIListLayout", itemContainer)
-                            hLayout.FillDirection = Enum.FillDirection.Horizontal
-                            hLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
-                            hLayout.VerticalAlignment = Enum.VerticalAlignment.Center
-                            hLayout.Padding = UDim.new(0, 5)
-                            Instance.new("UIPadding", itemContainer).PaddingLeft = UDim.new(0, 10)
-                            
-                            if data.image and data.image ~= "" then
-                                local icon = Instance.new("ImageLabel", itemContainer)
-                                icon.BackgroundTransparency = 1
-                                icon.Size = UDim2.new(0, 16, 0, 16)
-                                icon.Image = data.image
-                                icon.ScaleType = Enum.ScaleType.Fit
+                        local contents = itemsFolder:GetChildren()
+                        if #contents > 0 then
+                            local itemCounts = {}
+                            for _, item in pairs(contents) do
+                                if item:IsA("Accessory") or item:IsA("Tool") then
+                                    local amount = item:GetAttribute("Amount")
+                                    if not amount and item:FindFirstChild("Amount") then amount = item.Amount.Value end
+                                    amount = amount or 1
+                                    itemCounts[item.Name] = (itemCounts[item.Name] or 0) + amount
+                                end
                             end
                             
-                            local label = Instance.new("TextLabel", itemContainer)
-                            label.BackgroundTransparency = 1
-                            label.Size = UDim2.new(0, 0, 1, 0)
-                            label.AutomaticSize = Enum.AutomaticSize.X
-                            label.Text = data.count .. "x " .. data.cleanName
-                            label.TextColor3 = data.color
-                            label.Font = Enum.Font.GothamBold
-                            label.TextSize = 12
+                            local sortedItems = {}
+                            for name, count in pairs(itemCounts) do
+                                local clName, color, image, weight = formatItem(name)
+                                table.insert(sortedItems, {rawName = name, cleanName = clName, count = count, color = color, image = image, weight = weight})
+                            end
+                            
+                            table.sort(sortedItems, function(a, b) return a.weight > b.weight end)
+                            
+                            for i, data in ipairs(sortedItems) do
+                                local itemContainer = Instance.new("Frame")
+                                itemContainer.BackgroundTransparency = 1
+                                itemContainer.Size = UDim2.new(1, 0, 0, 18)
+                                itemContainer.LayoutOrder = i
+                                itemContainer.Parent = listFrame
+                                
+                                local hLayout = Instance.new("UIListLayout", itemContainer)
+                                hLayout.FillDirection = Enum.FillDirection.Horizontal
+                                hLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+                                hLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+                                hLayout.Padding = UDim.new(0, 5)
+                                Instance.new("UIPadding", itemContainer).PaddingLeft = UDim.new(0, 10)
+                                
+                                if data.image and data.image ~= "" then
+                                    local icon = Instance.new("ImageLabel", itemContainer)
+                                    icon.BackgroundTransparency = 1
+                                    icon.Size = UDim2.new(0, 16, 0, 16)
+                                    icon.Image = data.image
+                                    icon.ScaleType = Enum.ScaleType.Fit
+                                end
+                                
+                                local label = Instance.new("TextLabel", itemContainer)
+                                label.BackgroundTransparency = 1
+                                label.Size = UDim2.new(0, 0, 1, 0)
+                                label.AutomaticSize = Enum.AutomaticSize.X
+                                label.Text = data.count .. "x " .. data.cleanName
+                                label.TextColor3 = data.color
+                                label.Font = Enum.Font.GothamBold
+                                label.TextSize = 12
+                            end
+                            
+                            mainFrame.UIStroke.Color = Color3.fromRGB(100, 150, 255) 
+                            mainFrame.Visible = true
+                        else
+                            mainFrame.Visible = false
                         end
-                        
-                        mainFrame.UIStroke.Color = Color3.fromRGB(100, 150, 255) 
-                        mainFrame.Visible = true
-                    else
-                        mainFrame.Visible = false
                     end
                 end
-            end
-            end
-        end
-        
-        for chest, gui in pairs(chestGuis) do
-            if not activeChests[chest] or not chest.Parent then
-                gui:Destroy()
-                chestGuis[chest] = nil
-            end
-        end
-    end)
-end
-
--- Public API
-function Mega.Features.ChestESP.SetEnabled(state)
-    States.Misc.ChestESP.Enabled = state
-    if state then
-        StartESP()
-    else
-        if connections.ESP then
-            connections.ESP:Disconnect()
-            connections.ESP = nil
-        end
-        -- Очистка существующих ESP при выключении
-        for chest, gui in pairs(chestGuis) do
-            if gui then gui:Destroy() end
-        end
-        table.clear(chestGuis)
-    end
-end
-
--- Initialize if enabled on startup
-if States.Misc.ChestESP.Enabled then
-    Mega.Features.ChestESP.SetEnabled(true)
-end
+             end
+         end
+         
+         for chest, gui in pairs(chestGuis) do
+             if not activeChests[chest] or not chest.Parent then
+                 gui:Destroy()
+                 chestGuis[chest] = nil
+             end
+         end
+     end)
+ end
+ 
+ -- Public API
+ function Mega.Features.ChestESP.SetEnabled(state)
+     States.Misc.ChestESP.Enabled = state
+     if state then
+         StartESP()
+     else
+         if connections.ESP then
+             connections.ESP:Disconnect()
+             connections.ESP = nil
+         end
+         -- Очистка существующих ESP при выключении
+         for chest, gui in pairs(chestGuis) do
+             if gui then gui:Destroy() end
+         end
+         table.clear(chestGuis)
+     end
+ end
+ 
+ -- Initialize if enabled on startup
+ if States.Misc.ChestESP.Enabled then
+     Mega.Features.ChestESP.SetEnabled(true)
+ end
