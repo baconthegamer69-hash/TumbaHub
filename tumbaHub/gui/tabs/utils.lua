@@ -63,6 +63,20 @@ UI.CreateToggleWithSettings(TabFrame, "toggle_chest_steal", "Misc.ChestSteal.Ena
 end, {
     UI.CreateSlider(nil, "slider_chest_steal_range", "Misc.ChestSteal.Range", 5, 50)
 })
+
+task.spawn(function()
+    pcall(function() Mega.LoadModule("features/chest_esp.lua") end)
+end)
+
+UI.CreateToggleWithSettings(TabFrame, "toggle_chest_esp", "Misc.ChestESP.Enabled", function(state)
+    Mega.States.Misc.ChestESP.Enabled = state
+    if Mega.Features.ChestESP and Mega.Features.ChestESP.SetEnabled then Mega.Features.ChestESP.SetEnabled(state) end
+    if Mega.ShowNotification then
+        Mega.ShowNotification((Mega.GetText("toggle_chest_esp") or "Chest ESP") .. ": " .. (state and Mega.GetText("notify_enabled") or Mega.GetText("notify_disabled")), 2)
+    end
+end, {
+    UI.CreateSlider(nil, "slider_chest_esp_range", "Misc.ChestESP.MaxDistance", 50, 1000)
+})
 --#endregion
 
 --#region -- Auto-Deposit
