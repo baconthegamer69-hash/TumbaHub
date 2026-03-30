@@ -100,9 +100,6 @@ Mega.LoadModule("features/killaura.lua")
 Mega.LoadModule("features/bed_nuke.lua")
 Mega.LoadModule("features/bot.lua")
 
--- Load commands
-Mega.LoadModule("commands/kick.lua")
-
 -- Load the main GUI
 Mega.LoadModule("gui/main_window.lua")
 
